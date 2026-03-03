@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Waktu Solat Malaysia",
+        "description": "Data is sourced from JAKIM via solat.my API. The zone can be changed anytime from the 'Zon' entity on the device page.",
+        "data": {
+          "name": "Device Name",
+          "zone": "Prayer Time Zone (initial)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to solat.my API. Check your internet connection.",
+      "invalid_zone": "Invalid or unknown zone code.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "A device with this name is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Prayer Time Options",
+        "description": "Change the prayer time zone using the 'Zon' entity on the device page. No other options are available here."
+      }
+    }
+  }
+}

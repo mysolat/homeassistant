@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Waktu Solat Malaysia",
+        "description": "Data diambil terus daripada JAKIM melalui API solat.my. Zon boleh ditukar kemudian melalui entiti 'Zon' pada halaman peranti.",
+        "data": {
+          "name": "Nama Peranti",
+          "zone": "Zon Waktu Solat (permulaan)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Gagal menyambung ke solat.my API. Sila semak sambungan internet anda.",
+      "invalid_zone": "Zon tidak sah atau tidak ditemui.",
+      "unknown": "Ralat tidak diketahui."
+    },
+    "abort": {
+      "already_configured": "Nama peranti ini sudah digunakan."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pilihan Waktu Solat",
+        "description": "Tukar zon waktu solat menggunakan entiti 'Zon' pada halaman peranti. Tiada pilihan lain tersedia di sini."
+      }
+    }
+  }
+}
