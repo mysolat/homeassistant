@@ -2,6 +2,8 @@
 
 A proper Home Assistant custom component that fetches Malaysian prayer times directly from the **solat.my API** (powered by JAKIM e-Solat).
 
+<img width="999" height="874" alt="Image" src="https://github.com/user-attachments/assets/d6332e0d-331c-4d95-8d99-4f78c4935fdc" />
+
 ## Features
 
 - **16 entities** created automatically per device — no helpers needed:
