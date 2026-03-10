@@ -475,23 +475,25 @@ actions:
 
 ## Audio File Placement
 
-Put your audio files in `/config/www/azan/`:
+Put your audio files in `/media/azan/` (the Home Assistant media folder):
 
 ```
-config/
-└── www/
-    └── azan/
-        ├── azan1.mp3
-        ├── azan2.mp3
-        ├── azan_subuh1.mp3
-        ├── azan_subuh2.mp3
-        ├── azan_jumaat.mp3
-        ├── imsak_reminder.mp3
-        └── doa_selepas_azan.mp3
+media/
+└── azan/
+    ├── azan1.mp3
+    ├── azan2.mp3
+    ├── azan_subuh1.mp3
+    ├── azan_subuh2.mp3
+    ├── azan_jumaat.mp3
+    ├── imsak_reminder.mp3
+    └── doa_selepas_azan.mp3
 ```
 
-Files are served at `media-source://media_source/local/azan/<filename>` in automations,
-or at `http://homeassistant.local:8123/local/azan/<filename>` for direct URLs (e.g. Sonos).
+Files are served at `media-source://media_source/local/azan/<filename>` in automations.
+
+> **Note:** `/config/www/azan/` is a different location — it serves static files over HTTP at
+> `http://homeassistant.local:8123/local/azan/<filename>` (for Sonos/Alexa direct URL), but
+> **cannot** be accessed via `media-source://`. Use `/media/azan/` for all automations here.
 
 ---
 
