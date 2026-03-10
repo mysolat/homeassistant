@@ -3,7 +3,7 @@
 DOMAIN = "solat_my"
 
 API_BASE_URL = "https://solat.my/api"
-API_DAILY_ENDPOINT = "/daily/{zone}"
+API_MONTHLY_ENDPOINT = "/monthly/{zone}"
 API_LOCATIONS_ENDPOINT = "/locations"
 
 DEFAULT_SCAN_INTERVAL = 3600  # 1 hour in seconds
@@ -59,12 +59,12 @@ PRAYER_NAMES_EN = {
 
 PRAYER_ICONS = {
     PRAYER_IMSAK: "mdi:weather-night",
-    PRAYER_FAJR: "mdi:weather-sunset-up",
-    PRAYER_SYURUK: "mdi:weather-sunrise",
+    PRAYER_FAJR: "mdi:weather-night-partly-cloudy",
+    PRAYER_SYURUK: "mdi:weather-sunset-up",
     PRAYER_DHUHA: "mdi:weather-sunny-alert",
     PRAYER_DHUHR: "mdi:weather-sunny",
     PRAYER_ASR: "mdi:weather-partly-cloudy",
-    PRAYER_MAGHRIB: "mdi:weather-sunset",
+    PRAYER_MAGHRIB: "mdi:weather-sunset-down",
     PRAYER_ISHA: "mdi:weather-night",
 }
 

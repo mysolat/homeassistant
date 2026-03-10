@@ -5,7 +5,6 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_ZONE, DOMAIN, ZONES
@@ -88,11 +87,10 @@ class MediaPlayerSelect(RestoreEntity, SelectEntity):
         self._attr_options = self._get_media_players()
 
     def _get_media_players(self) -> list[str]:
-        """Return available (non-unavailable) media player entity IDs."""
+        """Return all known media player entity IDs regardless of availability."""
         players = [
             state.entity_id
             for state in self._hass.states.async_all("media_player")
-            if state.state not in ("unavailable", "unknown")
         ]
         return players or ["media_player.none"]
 
@@ -106,15 +104,21 @@ class MediaPlayerSelect(RestoreEntity, SelectEntity):
         @callback
         def _on_media_player_change(event) -> None:
             self._attr_options = self._get_media_players()
+            # Preserve the current selection — a player going offline is temporary.
+            # Only fall back if the entity_id is completely gone from HA state.
             if self._attr_current_option not in self._attr_options:
                 self._attr_current_option = self._attr_options[0] if self._attr_options else None
             self.async_write_ha_state()
 
+        # Track ALL media_player domain state changes (covers new players added later)
         self.async_on_remove(
-            async_track_state_change_event(
-                self.hass,
-                [s.entity_id for s in self.hass.states.async_all("media_player")],
-                _on_media_player_change,
+            self.hass.bus.async_listen(
+                "state_changed",
+                lambda event: (
+                    _on_media_player_change(event)
+                    if event.data.get("entity_id", "").startswith("media_player.")
+                    else None
+                ),
             )
         )
 
