@@ -1,0 +1,7 @@
+{
+    "name": "Waktu Solat Malaysia (solat.my)",
+    "content_in_root": false,
+    "homeassistant": "2024.8.0",
+    "iot_class": "cloud_polling",
+    "country": "MY"
+}
