@@ -72,11 +72,17 @@ actions:
         {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu {{ names[trigger.id] }}.
 
   # Set volume
-  - action: media_player.volume_set
-    target:
-      entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
-    data:
-      volume_level: "{{ states('number.waktu_solat_kelantangan_azan') | float }}"
+  # Set volume — skipped if media player does not support it (e.g. TV)
+  - if:
+      - condition: template
+        value_template: >
+          {{ state_attr(states('select.waktu_solat_pemain_media_azan'), 'supported_features') | int(0) | bitwise_and(4) > 0 }}
+    then:
+      - action: media_player.volume_set
+        target:
+          entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
+        data:
+          volume_level: "{{ states('number.waktu_solat_kelantangan_azan') | float }}"
 
   # TTS announcement
   - action: tts.google_translate_say
@@ -169,11 +175,17 @@ actions:
         {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu
         {% if now().weekday() == 4 %}Jumaat{% else %}Zohor{% endif %}.
 
-  - action: media_player.volume_set
-    target:
-      entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
-    data:
-      volume_level: "{{ states('number.waktu_solat_kelantangan_azan') | float }}"
+  # Set volume — skipped if media player does not support it (e.g. TV)
+  - if:
+      - condition: template
+        value_template: >
+          {{ state_attr(states('select.waktu_solat_pemain_media_azan'), 'supported_features') | int(0) | bitwise_and(4) > 0 }}
+    then:
+      - action: media_player.volume_set
+        target:
+          entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
+        data:
+          volume_level: "{{ states('number.waktu_solat_kelantangan_azan') | float }}"
 
   - action: media_player.play_media
     target:
@@ -265,61 +277,141 @@ actions:
 
 ---
 
-## Pause & Resume Around Azan
+## Pause & Resume All Playing Devices
 
-Pause current media playback, play azan + doa, then restore.
+Automatically finds **every** media player that is currently playing (TV, speakers, etc.), pauses them all, plays the azan, then restores each device back to what it was doing.
 
 ```yaml
-alias: "Azan Maghrib (Jeda & Sambung Semula)"
-description: "Pause current playback, play azan, then restore"
+alias: "Azan Harian (Jeda Semua & Sambung Semula)"
+description: "Pause all playing devices, play azan + doa, then resume everything"
 mode: single
 triggers:
   - trigger: time
+    at: sensor.waktu_solat_subuh
+    id: subuh
+  - trigger: time
+    at: sensor.waktu_solat_zohor
+    id: zohor
+  - trigger: time
+    at: sensor.waktu_solat_asar
+    id: asar
+  - trigger: time
     at: sensor.waktu_solat_maghrib
+    id: maghrib
+  - trigger: time
+    at: sensor.waktu_solat_isyak
+    id: isyak
 conditions: []
 actions:
-  # Snapshot current media state
-  - action: scene.create
+  # Step 1: Capture all currently playing media players into a variable
+  - variables:
+      peranti_bermain: >
+        {{ states.media_player
+           | selectattr('state', 'eq', 'playing')
+           | map(attribute='entity_id')
+           | list }}
+
+  # Step 2: Snapshot + pause all playing devices (only if something is playing)
+  - if:
+      - condition: template
+        value_template: "{{ peranti_bermain | length > 0 }}"
+    then:
+      - action: scene.create
+        data:
+          scene_id: sebelum_azan
+          snapshot_entities: "{{ peranti_bermain }}"
+      - action: media_player.media_pause
+        continue_on_error: true
+        target:
+          entity_id: "{{ peranti_bermain }}"
+      - delay: "00:00:02"
+
+  # Step 3: Persistent notification
+  - action: persistent_notification.create
     data:
-      scene_id: sebelum_azan
-      snapshot_entities:
-        - media_player.your_speaker
+      notification_id: solat_azan
+      title: >
+        🕋 Waktu Solat —
+        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ names[trigger.id] }}
+      message: >
+        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu {{ names[trigger.id] }}.
 
-  - action: media_player.media_pause
-    target:
-      entity_id: media_player.your_speaker
+  # Step 4: Set volume — skipped for TVs / devices that don't support it
+  - if:
+      - condition: template
+        value_template: >
+          {{ state_attr(states('select.waktu_solat_pemain_media_azan'), 'supported_features') | int(0) | bitwise_and(4) > 0 }}
+    then:
+      - action: media_player.volume_set
+        target:
+          entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
+        data:
+          volume_level: "{{ states('number.waktu_solat_kelantangan_azan') | float }}"
 
-  - delay: "00:00:02"
-
-  - action: media_player.volume_set
-    target:
-      entity_id: media_player.your_speaker
-    data:
-      volume_level: 0.7
-
+  # Step 5: Play azan audio
   - action: media_player.play_media
     target:
-      entity_id: media_player.your_speaker
+      entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
+    data:
+      media:
+        media_content_type: audio/mp3
+        media_content_id: >
+          {% if trigger.id == 'subuh' %}
+            {{ "media-source://media_source/local/azan/" ~
+               states('text.waktu_solat_fail_audio_azan_subuh').split(', ') | random }}
+          {% else %}
+            {{ "media-source://media_source/local/azan/" ~
+               states('text.waktu_solat_fail_audio_azan').split(', ') | random }}
+          {% endif %}
+        metadata: {}
+
+  # Step 6: Wait for azan to finish (Subuh is longer)
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: subuh
+        sequence:
+          - delay:
+              minutes: 4
+              seconds: 30
+    default:
+      - delay:
+          minutes: 2
+          seconds: 47
+
+  # Step 7: Play doa selepas azan
+  - action: media_player.play_media
+    alias: "Doa Selepas Azan"
+    target:
+      entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
     data:
       media:
         media_content_id: >
-          {{ "media-source://media_source/local/azan/" ~
-             states('text.waktu_solat_fail_audio_azan').split(', ') | random }}
-        media_content_type: audio/mp3
-        metadata: {}
+          media-source://media_source/local/azan/{{ states('text.waktu_solat_fail_doa_selepas_azan') }}
+        media_content_type: audio/mpeg
+        metadata:
+          title: Doa Selepas Azan
+          media_class: music
 
-  # Wait for playback to end (max 5 minutes)
+  # Step 8: Wait for doa to finish
   - wait_for_trigger:
       - trigger: state
-        entity_id: media_player.your_speaker
+        entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
         to: "idle"
     timeout:
-      minutes: 5
+      minutes: 2
 
-  # Restore previous media state
-  - action: scene.turn_on
-    target:
-      entity_id: scene.sebelum_azan
+  # Step 9: Resume all paused devices
+  - if:
+      - condition: template
+        value_template: "{{ peranti_bermain | length > 0 }}"
+    then:
+      - delay: "00:00:02"
+      - action: scene.turn_on
+        target:
+          entity_id: scene.sebelum_azan
 ```
 
 ---
@@ -415,3 +507,8 @@ or at `http://homeassistant.local:8123/local/azan/<filename>` for direct URLs (e
 - **Weekdays:** Monday=0, Tuesday=1, Wednesday=2, Thursday=3, **Friday=4**, Saturday=5, Sunday=6
 - The `at: sensor.*` trigger fires exactly when the sensor value (timestamp) matches the current time — no template needed
 - Use `mode: single` to prevent overlapping azan if HA restarts at prayer time
+- **TVs and volume_set:** TVs often do not support `media_player.volume_set`. All automations here guard against this using:
+  ```yaml
+  {{ state_attr(entity_id, 'supported_features') | int(0) | bitwise_and(4) > 0 }}
+  ```
+  Bit `4` = `VOLUME_SET`. If `0`, the step is skipped and the azan plays at whatever volume the TV is already set to.
