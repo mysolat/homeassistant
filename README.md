@@ -4,6 +4,8 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 <img width="999" height="874" alt="Image" src="https://github.com/user-attachments/assets/d6332e0d-331c-4d95-8d99-4f78c4935fdc" />
 
+<img width="1170" height="865" alt="Image" src="https://github.com/user-attachments/assets/173634ae-7af2-4cfb-8450-d594df49c7d2" />
+
 ## Features
 
 - **16 entities** created automatically per device — no helpers needed:
