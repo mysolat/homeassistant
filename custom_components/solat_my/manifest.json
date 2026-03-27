@@ -1,7 +1,7 @@
 {
     "domain": "solat_my",
     "name": "Waktu Solat Malaysia (solat.my)",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "config_flow": true,
     "documentation": "https://github.com/mysolat/homeassistant",
     "issue_tracker": "https://github.com/mysolat/homeassistant/issues",
