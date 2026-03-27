@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -32,6 +33,7 @@ from .const import (
 from .coordinator import SolatMyCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+LOCAL_STATE_UPDATE_INTERVAL = timedelta(minutes=1)
 
 
 def _make_device_info(entry: ConfigEntry) -> DeviceInfo:
@@ -165,6 +167,26 @@ class NextPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_next_prayer"
         self._attr_name = "Waktu Solat Seterusnya"
         self._attr_device_info = _make_device_info(entry)
+        self._cancel_interval: Any = None
+
+    async def async_added_to_hass(self) -> None:
+        """Set up periodic local updates for countdown and next prayer transitions."""
+        await super().async_added_to_hass()
+
+        @callback
+        def _handle_interval(_: datetime) -> None:
+            self.async_write_ha_state()
+
+        self._cancel_interval = async_track_time_interval(
+            self.hass, _handle_interval, LOCAL_STATE_UPDATE_INTERVAL
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up periodic update listener."""
+        if self._cancel_interval is not None:
+            self._cancel_interval()
+            self._cancel_interval = None
+        await super().async_will_remove_from_hass()
 
     def _get_next_prayer(self) -> tuple[str | None, datetime | None]:
         if self.coordinator.data is None:
@@ -192,7 +214,7 @@ class NextPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
         if prayer is None or dt_aware is None:
             return {"prayer": None, "time_24h": None, "countdown": None}
         delta = dt_aware - dt_util.now()
-        total_seconds = int(delta.total_seconds())
+        total_seconds = max(0, int(delta.total_seconds()))
         hours, rem = divmod(total_seconds, 3600)
         raw = self.coordinator.data.get("raw", {}) if self.coordinator.data else {}
         time_str = raw.get(prayer, "")
@@ -216,6 +238,26 @@ class CurrentPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_current_prayer"
         self._attr_name = "Waktu Solat Semasa"
         self._attr_device_info = _make_device_info(entry)
+        self._cancel_interval: Any = None
+
+    async def async_added_to_hass(self) -> None:
+        """Set up periodic local updates for prayer-period transitions."""
+        await super().async_added_to_hass()
+
+        @callback
+        def _handle_interval(_: datetime) -> None:
+            self.async_write_ha_state()
+
+        self._cancel_interval = async_track_time_interval(
+            self.hass, _handle_interval, LOCAL_STATE_UPDATE_INTERVAL
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up periodic update listener."""
+        if self._cancel_interval is not None:
+            self._cancel_interval()
+            self._cancel_interval = None
+        await super().async_will_remove_from_hass()
 
     @property
     def native_value(self) -> str | None:

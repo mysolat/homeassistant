@@ -11,6 +11,7 @@ import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import API_BASE_URL, API_MONTHLY_ENDPOINT, DOMAIN
 
@@ -69,7 +70,8 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Return today's prayer times, fetching from API only when the month changes."""
-        today_date = datetime.now().date()
+        # Use Home Assistant timezone for date boundaries.
+        today_date = dt_util.now().date()
         current_ym = (today_date.year, today_date.month)
 
         if self._monthly_cache is None or self._cache_ym != current_ym:
