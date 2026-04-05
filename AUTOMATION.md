@@ -13,6 +13,7 @@ The integration automatically creates all configuration entities when you add a 
 |--------|-------------|---------|
 | `number.waktu_solat_kelantangan_azan` | Azan volume (0.0 – 1.0) | `0.6` |
 | `select.waktu_solat_pemain_media_azan` | Which media player plays the azan | First available |
+| `select.waktu_solat_mod_pengumuman_azan` | Announcement mode before azan (`tts` or `audio`) | `tts` |
 | `text.waktu_solat_fail_audio_azan` | Comma-separated azan filenames | `azan1.mp3, azan2.mp3` |
 | `text.waktu_solat_fail_audio_azan_subuh` | Comma-separated Subuh azan filenames | `azan_subuh.mp3` |
 | `text.waktu_solat_fail_doa_selepas_azan` | Doa selepas azan filename | `doa_selepas_azan.mp3` |
@@ -53,25 +54,28 @@ actions:
       notification_id: solat_azan
       title: >
         🕋 Waktu Solat —
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-        {{ names[trigger.id] }}
+        {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+        {% set names = {'subuh': 'Subuh', 'syuruk': 'Syuruk', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ names.get(tid, 'Zohor') }}
       message: >
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+        {% set names = {'subuh': 'Subuh', 'syuruk': 'Syuruk', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
         {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu
-        {{ names[trigger.id] }} bagi kawasan ini dan kawasan yang sama waktu dengannya.
+        {{ names.get(tid, 'Zohor') }} bagi kawasan ini dan kawasan yang sama waktu dengannya.
 
   # Mobile push notification
   - action: notify.notify
     data:
       title: >
         🕋 Waktu Solat —
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-        {{ names[trigger.id] }}
+        {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+        {% set names = {'subuh': 'Subuh', 'syuruk': 'Syuruk', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ names.get(tid, 'Zohor') }}
       message: >
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-        {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu {{ names[trigger.id] }}.
+        {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+        {% set names = {'subuh': 'Subuh', 'syuruk': 'Syuruk', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu {{ names.get(tid, 'Zohor') }}.
 
-  # Set volume
   # Set volume — skipped if media player does not support it (e.g. TV)
   - if:
       - condition: template
@@ -84,16 +88,34 @@ actions:
         data:
           volume_level: "{{ states('number.waktu_solat_kelantangan_azan') | float }}"
 
-  # TTS announcement
-  - action: tts.google_translate_say
-    data:
-      entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
-      language: id
-      message: >
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-        Sekarang telah masuk waktu {{ names[trigger.id] }}.
-
-  - delay: "00:00:10"
+  # Announcement — TTS or pre-recorded audio based on user setting
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states('select.waktu_solat_mod_pengumuman_azan') == 'audio' }}
+        sequence:
+          - action: media_player.play_media
+            target:
+              entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
+            data:
+              media:
+                media_content_type: audio/mp3
+                media_content_id: >
+                  {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+                  media-source://media_source/local/tts/tts_{{ tid }}.mp3
+                metadata: {}
+          - delay: "00:00:10"
+    default:
+      - action: tts.google_translate_say
+        data:
+          entity_id: "{{ states('select.waktu_solat_pemain_media_azan') }}"
+          language: id
+          message: >
+            {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+            {% set names = {'subuh': 'Subuh', 'syuruk': 'Syuruk', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+            Sekarang telah masuk waktu {{ names.get(tid, 'Zohor') }}.
+      - delay: "00:00:10"
 
   # Play azan audio (random selection from text entity)
   - action: media_player.play_media
@@ -102,39 +124,36 @@ actions:
     data:
       extra:
         title: >
-          {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-          Azan {{ names[trigger.id] }}
+          {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+          {% set names = {'subuh': 'Subuh', 'syuruk': 'Syuruk', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+          Azan {{ names.get(tid, 'Zohor') }}
         thumb: "https://solat.my/icon-512.png"
       media:
         media_content_type: audio/mp3
         media_content_id: >
-          {% if trigger.id == 'subuh' %}
-            {{ "media-source://media_source/local/azan/" ~
-               states('text.waktu_solat_fail_audio_azan_subuh').split(', ') | random }}
+          {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+          {% if tid == 'subuh' %}
+            {{ "media-source://media_source/local/azan/" ~ states('text.waktu_solat_fail_audio_azan_subuh').split(', ') | random | trim }}
           {% else %}
-            {{ "media-source://media_source/local/azan/" ~
-               states('text.waktu_solat_fail_audio_azan').split(', ') | random }}
+            {{ "media-source://media_source/local/azan/" ~ states('text.waktu_solat_fail_audio_azan').split(', ') | random | trim }}
           {% endif %}
         metadata: {}
 
   # Wait for azan to finish, then play doa
   - choose:
       - conditions:
-          - condition: trigger
-            id: subuh
+          - condition: template
+            value_template: >
+              {% set tid = trigger.id if trigger is defined else states('sensor.waktu_solat_waktu_solat_semasa') | lower %}
+              {{ tid == 'subuh' }}
         sequence:
           - delay:
               minutes: 4
               seconds: 30
-      - conditions:
-          - condition: not
-            conditions:
-              - condition: trigger
-                id: subuh
-        sequence:
-          - delay:
-              minutes: 2
-              seconds: 47
+    default:
+      - delay:
+          minutes: 2
+          seconds: 47
 
   # Play doa selepas azan
   - action: media_player.play_media
@@ -479,21 +498,251 @@ Put your audio files in `/media/azan/` (the Home Assistant media folder):
 
 ```
 media/
-└── azan/
-    ├── azan1.mp3
-    ├── azan2.mp3
-    ├── azan_subuh1.mp3
-    ├── azan_subuh2.mp3
-    ├── azan_jumaat.mp3
-    ├── imsak_reminder.mp3
-    └── doa_selepas_azan.mp3
+├── azan/
+│   ├── azan1.mp3
+│   ├── azan2.mp3
+│   ├── azan_subuh1.mp3
+│   ├── azan_subuh2.mp3
+│   ├── azan_jumaat.mp3
+│   ├── imsak_reminder.mp3
+│   └── doa_selepas_azan.mp3
+└── tts/
+    ├── tts_subuh.mp3
+    ├── tts_zohor.mp3
+    ├── tts_asar.mp3
+    ├── tts_maghrib.mp3
+    └── tts_isyak.mp3
 ```
 
-Files are served at `media-source://media_source/local/azan/<filename>` in automations.
+Azan files are served at `media-source://media_source/local/azan/<filename>` in automations.
+
+TTS audio files (used when `select.waktu_solat_mod_pengumuman_azan` is set to `audio`) are served at `media-source://media_source/local/tts/tts_<prayer>.mp3` — filenames must follow the pattern `tts_subuh.mp3`, `tts_zohor.mp3`, `tts_asar.mp3`, `tts_maghrib.mp3`, `tts_isyak.mp3`.
 
 > **Note:** `/config/www/azan/` is a different location — it serves static files over HTTP at
 > `http://homeassistant.local:8123/local/azan/<filename>` (for Sonos/Alexa direct URL), but
 > **cannot** be accessed via `media-source://`. Use `/media/azan/` for all automations here.
+
+---
+
+---
+
+---
+
+## Dashboard Card
+
+Since standard Home Assistant blocks raw HTML in Markdown, the best and most reliable way to recreate beautiful layouts is by using **Mushroom Cards**. Here are **three completely different UI designs** you can copy and paste into a Manual card.
+
+### How to add
+
+1. Open your dashboard → click the **pencil icon** (Edit)
+2. Click **Add Card** → scroll to the bottom → **Manual**
+3. Paste one of the YAML blocks below → **Save**
+
+> **Note:** Replace `waktu_solat` in the entity IDs if you renamed your device.
+
+---
+
+### Layout 1: The Premium Grid (3x2)
+*A balanced, dashboard-friendly view with a prominent current time badge and a 3x2 grid of prayer times. Features live colored icon badges for 'Current' (teal check) and 'Next' (orange timer) prayers.*
+
+```yaml
+type: vertical-stack
+cards:
+  - type: custom:mushroom-title-card
+    title: >-
+      {{ now().strftime('%I:%M') }} {{ 'PG' if now().hour < 12 else 'PTG' }}, {{ ['Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu','Ahad'][now().weekday()] }}
+    subtitle: >-
+      {{ now().strftime('%d') }} {{ ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'][now().month - 1] }} {{ now().year }} | {{ states('sensor.waktu_solat_tarikh_hijri') }}
+    alignment: center
+
+  - type: custom:mushroom-template-card
+    primary: '🕌 Waktu Sekarang: {{ states(''sensor.waktu_solat_waktu_solat_semasa'') }}'
+    secondary: >-
+      {% set next_p = states('sensor.waktu_solat_waktu_solat_seterusnya') %}
+      {% set cd = state_attr('sensor.waktu_solat_waktu_solat_seterusnya', 'countdown') %}
+      {% if next_p not in ('Selesai', 'unknown', 'unavailable') %} Seterusnya {{ next_p }} dalam {{ cd }} {% else %} Selesai {% endif %}
+    icon: ''
+    layout: vertical
+    badge_icon: mdi:circle
+    badge_color: teal
+    tap_action:
+      action: more-info
+      entity: select.waktu_solat_mod_pengumuman_azan
+
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        primary: '{{ state_attr(''sensor.waktu_solat_subuh'', ''time_24h'') }}'
+        secondary: Subuh
+        icon: mdi:weather-night-partly-cloudy
+        icon_color: indigo
+        badge_icon: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Subuh' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Subuh' %} mdi:timer-sand {% endif %}
+        badge_color: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Subuh' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Subuh' %} orange {% endif %}
+        layout: vertical
+        
+      - type: custom:mushroom-template-card
+        primary: '{{ state_attr(''sensor.waktu_solat_syuruk'', ''time_24h'') }}'
+        secondary: Syuruk
+        icon: mdi:weather-sunset-up
+        icon_color: amber
+        badge_icon: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Syuruk' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Syuruk' %} mdi:timer-sand {% endif %}
+        badge_color: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Syuruk' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Syuruk' %} orange {% endif %}
+        layout: vertical
+        
+      - type: custom:mushroom-template-card
+        primary: '{{ state_attr(''sensor.waktu_solat_zohor'', ''time_24h'') }}'
+        secondary: Zohor
+        icon: mdi:weather-sunny
+        icon_color: orange
+        badge_icon: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Zohor' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Zohor' %} mdi:timer-sand {% endif %}
+        badge_color: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Zohor' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Zohor' %} orange {% endif %}
+        layout: vertical
+        
+      - type: custom:mushroom-template-card
+        primary: '{{ state_attr(''sensor.waktu_solat_asar'', ''time_24h'') }}'
+        secondary: Asar
+        icon: mdi:weather-partly-cloudy
+        icon_color: deep-orange
+        badge_icon: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Asar' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Asar' %} mdi:timer-sand {% endif %}
+        badge_color: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Asar' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Asar' %} orange {% endif %}
+        layout: vertical
+        
+      - type: custom:mushroom-template-card
+        primary: '{{ state_attr(''sensor.waktu_solat_maghrib'', ''time_24h'') }}'
+        secondary: Maghrib
+        icon: mdi:weather-sunset-down
+        icon_color: red
+        badge_icon: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Maghrib' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Maghrib' %} mdi:timer-sand {% endif %}
+        badge_color: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Maghrib' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Maghrib' %} orange {% endif %}
+        layout: vertical
+        
+      - type: custom:mushroom-template-card
+        primary: '{{ state_attr(''sensor.waktu_solat_isyak'', ''time_24h'') }}'
+        secondary: Isyak
+        icon: mdi:weather-night
+        icon_color: blue
+        badge_icon: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Isyak' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Isyak' %} mdi:timer-sand {% endif %}
+        badge_color: >-
+          {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Isyak' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Isyak' %} orange {% endif %}
+        layout: vertical
+
+  - type: custom:mushroom-template-card
+    primary: ''
+    secondary: '📍 Zon: {{ state_attr(''sensor.waktu_solat_subuh'',''zone'') }} {% if state_attr(''sensor.waktu_solat_subuh'', ''zone_desc'') %}({{ state_attr(''sensor.waktu_solat_subuh'', ''zone_desc'').split('' - '')[0] }}){% endif %}'
+    icon: ''
+    layout: vertical
+    tap_action: { action: none }
+```
+
+---
+
+### Layout 2: The Sleek Timeline
+*Excellent for mobile views. A vertical list of prayers using the exact same premium heading, colored icons, and badge indicators (teal check, orange timer) as the Grid layout.*
+
+```yaml
+type: vertical-stack
+cards:
+  - type: custom:mushroom-title-card
+    title: >-
+      {{ now().strftime('%I:%M') }} {{ 'PG' if now().hour < 12 else 'PTG' }}, {{ ['Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu','Ahad'][now().weekday()] }}
+    subtitle: >-
+      {{ now().strftime('%d') }} {{ ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'][now().month - 1] }} {{ now().year }} | {{ states('sensor.waktu_solat_tarikh_hijri') }}
+    alignment: center
+
+  - type: custom:mushroom-template-card
+    primary: '🕌 Waktu Sekarang: {{ states(''sensor.waktu_solat_waktu_solat_semasa'') }}'
+    secondary: >-
+      {% set next_p = states('sensor.waktu_solat_waktu_solat_seterusnya') %}
+      {% set cd = state_attr('sensor.waktu_solat_waktu_solat_seterusnya', 'countdown') %}
+      {% if next_p not in ('Selesai', 'unknown', 'unavailable') %} Seterusnya {{ next_p }} dalam {{ cd }} {% else %} Selesai {% endif %}
+    icon: ''
+    layout: vertical
+    badge_icon: mdi:circle
+    badge_color: teal
+    tap_action:
+      action: more-info
+      entity: select.waktu_solat_mod_pengumuman_azan
+
+  - type: custom:mushroom-template-card
+    primary: Subuh
+    secondary: '{{ state_attr(''sensor.waktu_solat_subuh'', ''time_24h'') }}'
+    icon: mdi:weather-night-partly-cloudy
+    icon_color: indigo
+    badge_icon: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Subuh' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Subuh' %} mdi:timer-sand {% endif %}
+    badge_color: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Subuh' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Subuh' %} orange {% endif %}
+
+  - type: custom:mushroom-template-card
+    primary: Syuruk
+    secondary: '{{ state_attr(''sensor.waktu_solat_syuruk'', ''time_24h'') }}'
+    icon: mdi:weather-sunset-up
+    icon_color: amber
+    badge_icon: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Syuruk' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Syuruk' %} mdi:timer-sand {% endif %}
+    badge_color: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Syuruk' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Syuruk' %} orange {% endif %}
+
+  - type: custom:mushroom-template-card
+    primary: Zohor
+    secondary: '{{ state_attr(''sensor.waktu_solat_zohor'', ''time_24h'') }}'
+    icon: mdi:weather-sunny
+    icon_color: orange
+    badge_icon: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Zohor' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Zohor' %} mdi:timer-sand {% endif %}
+    badge_color: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Zohor' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Zohor' %} orange {% endif %}
+
+  - type: custom:mushroom-template-card
+    primary: Asar
+    secondary: '{{ state_attr(''sensor.waktu_solat_asar'', ''time_24h'') }}'
+    icon: mdi:weather-partly-cloudy
+    icon_color: deep-orange
+    badge_icon: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Asar' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Asar' %} mdi:timer-sand {% endif %}
+    badge_color: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Asar' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Asar' %} orange {% endif %}
+
+  - type: custom:mushroom-template-card
+    primary: Maghrib
+    secondary: '{{ state_attr(''sensor.waktu_solat_maghrib'', ''time_24h'') }}'
+    icon: mdi:weather-sunset-down
+    icon_color: red
+    badge_icon: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Maghrib' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Maghrib' %} mdi:timer-sand {% endif %}
+    badge_color: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Maghrib' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Maghrib' %} orange {% endif %}
+
+  - type: custom:mushroom-template-card
+    primary: Isyak
+    secondary: '{{ state_attr(''sensor.waktu_solat_isyak'', ''time_24h'') }}'
+    icon: mdi:weather-night
+    icon_color: blue
+    badge_icon: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Isyak' %} mdi:check-circle {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Isyak' %} mdi:timer-sand {% endif %}
+    badge_color: >-
+      {% if states('sensor.waktu_solat_waktu_solat_semasa') == 'Isyak' %} teal {% elif states('sensor.waktu_solat_waktu_solat_seterusnya') == 'Isyak' %} orange {% endif %}
+
+  - type: custom:mushroom-template-card
+    primary: ''
+    secondary: '📍 Zon: {{ state_attr(''sensor.waktu_solat_subuh'',''zone'') }} {% if state_attr(''sensor.waktu_solat_subuh'', ''zone_desc'') %}({{ state_attr(''sensor.waktu_solat_subuh'', ''zone_desc'').split('' - '')[0] }}){% endif %}'
+    icon: ''
+    layout: vertical
+    tap_action: { action: none }
+```
 
 ---
 
