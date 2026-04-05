@@ -24,6 +24,7 @@ async def async_setup_entry(
         [
             ZoneSelect(coordinator, entry),
             MediaPlayerSelect(hass, entry),
+            AnnouncementModeSelect(entry),
         ]
     )
 
@@ -137,15 +138,17 @@ class MediaPlayerSelect(RestoreEntity, SelectEntity):
             # User selection is persisted and should remain sticky.
             self.async_write_ha_state()
 
+        @callback
+        def _filter_media_player_events(event) -> None:
+            """Filter state-changed events to media_player domain only."""
+            if event.data.get("entity_id", "").startswith("media_player."):
+                _on_media_player_change(event)
+
         # Track ALL media_player domain state changes (covers new players added later)
         self.async_on_remove(
             self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
-                lambda event: (
-                    _on_media_player_change(event)
-                    if event.data.get("entity_id", "").startswith("media_player.")
-                    else None
-                ),
+                _filter_media_player_events,
             )
         )
         self.async_write_ha_state()
@@ -154,4 +157,38 @@ class MediaPlayerSelect(RestoreEntity, SelectEntity):
         """Handle media player selection."""
         self._attr_current_option = option
         self._persist_selected_player()
+        self.async_write_ha_state()
+
+
+class AnnouncementModeSelect(RestoreEntity, SelectEntity):
+    """Select entity for announcement mode played before azan.
+
+    Options:
+      ``tts``   — use Google Translate TTS (original behaviour, default)
+      ``audio`` — play a pre-recorded MP3 from media/tts/ instead
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Mod Pengumuman Azan"
+    _attr_icon = "mdi:bullhorn"
+    _attr_options = ["tts", "audio"]
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the announcement mode select entity."""
+        self._entry = entry
+        self._attr_unique_id = f"{entry.entry_id}_mod_pengumuman"
+        self._attr_device_info = _make_device_info(entry)
+        self._attr_current_option = "tts"
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last selection on startup."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            if last_state.state in self._attr_options:
+                self._attr_current_option = last_state.state
+        self.async_write_ha_state()
+
+    async def async_select_option(self, option: str) -> None:
+        """Handle mode selection."""
+        self._attr_current_option = option
         self.async_write_ha_state()
