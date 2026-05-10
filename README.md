@@ -8,13 +8,14 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 ## Features
 
-- **16 entities** created automatically per device — no helpers needed:
+- **17 entities** created automatically per device — no helpers needed:
   - **8 prayer time sensors** (Imsak, Subuh, Syuruk, Dhuha, Zohor, Asar, Maghrib, Isyak)
   - **Tarikh Hijri** — formatted Hijri date with month name in Malay
   - **Waktu Solat Seterusnya** — next upcoming prayer with countdown
   - **Waktu Solat Semasa** — current prayer period
   - **Zon** — select entity to switch zone live (all 59 zones, updates all sensors instantly)
   - **Pemain Media Azan** — auto-populated media player selector
+  - **Mod Pengumuman Azan** — announcement mode before azan (`tts` or `audio`)
   - **Kelantangan Azan** — volume slider (0.0–1.0)
   - **Fail Audio Azan / Subuh / Doa** — configurable audio filenames
 - Supports **59 Malaysian zones** (all JAKIM zones + W.P.)
@@ -71,77 +72,26 @@ The following entities are created under device **"Waktu Solat"** (default name)
 |-----------|------|-------------|
 | `select.waktu_solat_zon` | Zon | Active zone — change to switch all sensors instantly |
 | `select.waktu_solat_pemain_media_azan` | Pemain Media Azan | Media player for azan playback |
+| `select.waktu_solat_mod_pengumuman_azan` | Mod Pengumuman Azan | Announcement mode before azan (`tts` or `audio`) |
 | `number.waktu_solat_kelantangan_azan` | Kelantangan Azan | Azan volume (0.0–1.0 slider) |
 | `text.waktu_solat_fail_audio_azan` | Fail Audio Azan | Comma-separated azan filenames |
 | `text.waktu_solat_fail_audio_azan_subuh` | Fail Audio Azan Subuh | Comma-separated Subuh azan filenames |
 | `text.waktu_solat_fail_doa_selepas_azan` | Fail Doa Selepas Azan | Doa audio filename |
 
-## Example Dashboard Card
+## Dashboard Cards
 
-```yaml
-type: entities
-title: Waktu Solat
-entities:
-  - entity: sensor.waktu_solat_waktu_solat_semasa
-    name: Waktu Semasa
-  - entity: sensor.waktu_solat_waktu_solat_seterusnya
-    name: Waktu Seterusnya
-  - entity: sensor.waktu_solat_imsak
-    name: Imsak
-    format: time
-  - entity: sensor.waktu_solat_subuh
-    name: Subuh
-    format: time
-  - entity: sensor.waktu_solat_syuruk
-    name: Syuruk
-    format: time
-  - entity: sensor.waktu_solat_dhuha
-    name: Dhuha
-    format: time
-  - entity: sensor.waktu_solat_zohor
-    name: Zohor
-    format: time
-  - entity: sensor.waktu_solat_asar
-    name: Asar
-    format: time
-  - entity: sensor.waktu_solat_maghrib
-    name: Maghrib
-    format: time
-  - entity: sensor.waktu_solat_isyak
-    name: Isyak
-    format: time
-  - entity: sensor.waktu_solat_tarikh_hijri
-    name: Tarikh Hijri
-```
+See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts — a 3×2 grid for desktop and a vertical timeline for mobile, both with live current/next prayer indicators.
 
-## Azan Automation Example
+## Azan Automations
 
-```yaml
-automation:
-  - alias: "Azan Subuh"
-    trigger:
-      - platform: time
-        at: sensor.waktu_solat_subuh
-    action:
-      - service: media_player.play_media
-        target:
-          entity_id: media_player.your_speaker
-        data:
-          media_content_id: /local/audio/azan_subuh.mp3
-          media_content_type: music
+See [AUTOMATION.md](AUTOMATION.md) for full automation examples including:
 
-  - alias: "Azan Zohor"
-    trigger:
-      - platform: time
-        at: sensor.waktu_solat_zohor
-    action:
-      - service: media_player.play_media
-        target:
-          entity_id: media_player.your_speaker
-        data:
-          media_content_id: /local/audio/azan.mp3
-          media_content_type: music
-```
+- Main azan for all five prayer times
+- Jumaat (Friday) override
+- Imsak reminder
+- Pre-prayer countdown notification
+- Pause all devices during azan, then resume
+- Multi-room broadcast
 
 ## Supported Zones
 
