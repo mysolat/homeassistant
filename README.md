@@ -81,6 +81,7 @@ The following entities are created under device **"Waktu Solat"** (default name)
 ## Dashboard Cards
 
 See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts — a 3×2 grid for desktop and a vertical timeline for mobile, both with live current/next prayer indicators.
+<img width="671" height="572" alt="Image" src="https://github.com/user-attachments/assets/13ac5b24-b76c-4253-8ec0-5007ec247d3d" />
 
 ## Azan Automations
 
