@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Removed the display's old name from the code, file names and URLs, and dropped the legacy card type alias. Use `custom:solat-my-skrin-solat-card`; the card now loads from `/api/solat_my/skrin-solat/`. Settings entities are migrated to new unique IDs automatically, and their entity IDs do not change.
+
 ## [1.0.10] - 2026-10-30
 
 ### Added
@@ -9,7 +14,7 @@ All notable changes to this project will be documented in this file.
 - **Uji Azan** and **Henti Azan** buttons play the configured azan now, or stop it, so you can check the player, volume and file without waiting for a prayer.
 
 ### Changed
-- The full-screen display is now called **Skrin Solat**. Its card type is `custom:solat-my-skrin-solat-card`. The old type `custom:solat-my-mimbar-card` still works. Existing entity IDs stay the same, and only their names change.
+- The full-screen display is now called **Skrin Solat**. Its card type is `custom:solat-my-skrin-solat-card`. Existing entity IDs stay the same, and only their names change.
 
 ### Fixed
 - The azan media player list now updates only when a media player is added or removed. Before, it ran on every state change in Home Assistant.
@@ -54,17 +59,17 @@ All notable changes to this project will be documented in this file.
 ## [1.0.5] - 2026-09-19
 
 ### Added
-- **Paparan Mimbar Skrin Penuh** — full-screen `custom:solat-my-mimbar-card` for TVs and kiosk dashboards: local next-prayer countdown (including the after-Isyak rollover), current and next prayer highlight, optional Imsak/Dhuha and Ramadan rail, adhan/iqamah/quiet-time lifecycle, and message or image slides. Malay-only; it never controls azan audio.
-- Five device controls for the card: `select.waktu_solat_warna_latar_mimbar` (five colour presets), `select.waktu_solat_paparan_latar_mimbar` (background image on/off), `number.waktu_solat_kejelasan_latar_mimbar` (0–100), `text.waktu_solat_imej_latar_mimbar` (a `/local/...` image), and `select.waktu_solat_format_masa_mimbar` (`24h` or `12h`, shown as AM/PM).
+- **Skrin Solat** — full-screen prayer display card (now `custom:solat-my-skrin-solat-card`) for TVs and kiosk dashboards: local next-prayer countdown (including the after-Isyak rollover), current and next prayer highlight, optional Imsak/Dhuha and Ramadan rail, adhan/iqamah/quiet-time lifecycle, and message or image slides. Malay-only; it never controls azan audio.
+- Five device controls for the card: `select.waktu_solat_warna_latar_skrin_solat` (five colour presets), `select.waktu_solat_paparan_latar_skrin_solat` (background image on/off), `number.waktu_solat_kejelasan_latar_skrin_solat` (0–100), `text.waktu_solat_imej_latar_skrin_solat` (a `/local/...` image), and `select.waktu_solat_format_masa_skrin_solat` (`24h` or `12h`, shown as AM/PM).
 - The integration now serves the card and loads it on every dashboard automatically; no dashboard resource is needed. Its URL carries a hash of the card files, so browsers pick up updates.
-- DASHBOARD.md: paste-ready Mimbar dashboard using the default entity IDs, with an optional extended version (Iqamah countdown, notices).
+- DASHBOARD.md: paste-ready Skrin Solat dashboard using the default entity IDs, with an optional extended version (Iqamah countdown, notices).
 
 ### Changed
 - `manifest.json` now lists `frontend` and `http` under `after_dependencies`.
 - README entity counts corrected to 23 per device and the new controls added to the entity tables.
 
 ### Upgrade note
-- If you added `/api/solat_my/mimbar/solat-my-mimbar-card.js` as a dashboard resource by hand, remove it, or the card loads twice. Restart Home Assistant and hard-refresh your browser after updating.
+- If you added the card's JavaScript file as a dashboard resource by hand, remove it, or the card loads twice. Restart Home Assistant and hard-refresh your browser after updating.
 
 ## [1.0.3] - 2026-05-10
 

@@ -226,8 +226,6 @@ A full-screen prayer display for a TV or kiosk. The card is built into the integ
 
 ### Set up
 
-Installed before 1.0.10? Your entities keep their old IDs (`…_mimbar`), and `custom:solat-my-mimbar-card` still works.
-
 1. Open **Settings → Dashboards → Add dashboard → New dashboard from scratch**, name it `Skrin Solat`, and open it.
 2. Click the pencil (Edit), then **⋮ → Raw configuration editor**. Replace everything with this and **Save**:
 
@@ -263,8 +261,7 @@ Renamed your device? Replace `waktu_solat` in the entity IDs.
 
 **Troubleshooting**
 
-- **Card missing** ("Custom element doesn't exist"): restart Home Assistant and hard-refresh. If it is still missing, add it by hand: turn on **Advanced mode** in your profile, then **Settings → Dashboards → ⋮ → Resources → Add resource**, URL `/api/solat_my/mimbar/solat-my-mimbar-card.js`, type **JavaScript module**.
-- **Upgrading from an earlier build** where you added that resource by hand: delete it, or the card loads twice.
+- **Card missing** ("Custom element doesn't exist"): restart Home Assistant and hard-refresh. If it is still missing, add it by hand: turn on **Advanced mode** in your profile, then **Settings → Dashboards → ⋮ → Resources → Add resource**, URL `/api/solat_my/skrin-solat/solat-my-skrin-solat-card.js`, type **JavaScript module**.
 
 Want more? The card also supports `location`, an Iqamah countdown (`iqama`), adhan and quiet-time lengths, and rotating notices (`slides`). To use them, follow the same steps but paste this whole dashboard in step 2 instead. The Ramadan cue needs `imsak` and a Hijri entity whose `month` attribute is `09`.
 
