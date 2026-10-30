@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.9] - 2026-10-30
+
+### Changed
+- Brand images follow Home Assistant's brand standard: `icon.png` and `dark_icon.png` are 256×256, with 512×512 `@2x` versions. The duplicate logo files are removed; Home Assistant uses the icon in their place.
+- The READMEs have My Home Assistant buttons to open the repository in HACS, start the integration setup, and import each blueprint.
+
 ## [1.0.8] - 2026-10-30
 
 ### Added
