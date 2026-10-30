@@ -72,11 +72,6 @@ class AudioFileText(RestoreEntity, TextEntity):
         self._attr_native_value = value
         self.async_write_ha_state()
 
-    @property
-    def filenames(self) -> list[str]:
-        """Return the list of configured filenames (stripped)."""
-        return [f.strip() for f in (self._attr_native_value or "").split(",") if f.strip()]
-
 
 class MimbarBackgroundImageText(RestoreEntity, TextEntity):
     """Configure the local image used by the Mimbar image background."""

@@ -8,9 +8,6 @@ DOMAIN = "solat_my"
 
 API_BASE_URL = "https://solat.my/api"
 API_MONTHLY_ENDPOINT = "/monthly/{zone}/{month}?year={year}"
-API_LOCATIONS_ENDPOINT = "/locations"
-
-DEFAULT_SCAN_INTERVAL = 3600  # 1 hour in seconds
 
 CONF_NAME = "name"
 CONF_ZONE = "zone"
@@ -62,17 +59,6 @@ PRAYER_NAMES_MS = {
     PRAYER_ASR: "Asar",
     PRAYER_MAGHRIB: "Maghrib",
     PRAYER_ISHA: "Isyak",
-}
-
-PRAYER_NAMES_EN = {
-    PRAYER_IMSAK: "Imsak",
-    PRAYER_FAJR: "Fajr",
-    PRAYER_SYURUK: "Syuruk",
-    PRAYER_DHUHA: "Dhuha",
-    PRAYER_DHUHR: "Dhuhr",
-    PRAYER_ASR: "Asr",
-    PRAYER_MAGHRIB: "Maghrib",
-    PRAYER_ISHA: "Isha",
 }
 
 PRAYER_ICONS = {
