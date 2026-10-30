@@ -78,7 +78,7 @@ export class MimbarPrayerScreenEditor extends HTMLElement {
     );
     const backgroundHint = document.createElement("p");
     backgroundHint.className = "hint";
-    backgroundHint.textContent = "Pilih Latar masjid untuk imej Mimbar, Warna untuk salah satu lima warna, atau Imej sendiri dan masukkan laluan /local/.";
+    backgroundHint.textContent = "Pilih Latar masjid untuk imej Skrin Solat, Warna untuk salah satu lima warna, atau Imej sendiri dan masukkan laluan /local/.";
     background.append(backgroundGrid, backgroundHint);
 
     const hint = document.createElement("p");
@@ -135,7 +135,7 @@ export class MimbarPrayerScreenEditor extends HTMLElement {
     labelText.textContent = "Jenis latar";
     const select = document.createElement("select");
     select.name = "background.mode";
-    for (const [value, text] of [["courtyard", "Latar masjid Mimbar"], ["color", "Warna latar"], ["image", "Imej sendiri"]]) {
+    for (const [value, text] of [["courtyard", "Latar masjid"], ["color", "Warna latar"], ["image", "Imej sendiri"]]) {
       const option = document.createElement("option");
       option.value = value;
       option.textContent = text;
@@ -230,6 +230,13 @@ export class MimbarPrayerScreenEditor extends HTMLElement {
   }
 }
 
+// Keep the old editor tag as a subclass alias for dashboards saved with the
+// legacy card type.
+class LegacyMimbarPrayerScreenEditor extends MimbarPrayerScreenEditor {}
+
+if (!customElements.get("solat-my-skrin-solat-card-editor")) {
+  customElements.define("solat-my-skrin-solat-card-editor", MimbarPrayerScreenEditor);
+}
 if (!customElements.get("solat-my-mimbar-card-editor")) {
-  customElements.define("solat-my-mimbar-card-editor", MimbarPrayerScreenEditor);
+  customElements.define("solat-my-mimbar-card-editor", LegacyMimbarPrayerScreenEditor);
 }

@@ -18,7 +18,8 @@ const {
 } = await import(`./mimbar-model.mjs${assetVersion}`);
 await import(`./mimbar-editor.js${assetVersion}`);
 
-const CARD_TYPE = "solat-my-mimbar-card";
+const CARD_TYPE = "solat-my-skrin-solat-card";
+const LEGACY_CARD_TYPE = "solat-my-mimbar-card";
 const PRAYER_LABELS = {
   imsak: "Imsak",
   subuh: "Subuh",
@@ -98,7 +99,7 @@ export class MimbarPrayerScreenCard extends HTMLElement {
   }
 
   static getConfigElement() {
-    return document.createElement("solat-my-mimbar-card-editor");
+    return document.createElement("solat-my-skrin-solat-card-editor");
   }
 
   static getStubConfig() {
@@ -879,15 +880,22 @@ export class MimbarPrayerScreenCard extends HTMLElement {
   }
 }
 
+// One constructor cannot be registered under two names, so the legacy type
+// gets its own subclass. Dashboards saved with the old type keep working.
+class LegacyMimbarCard extends MimbarPrayerScreenCard {}
+
 if (!customElements.get(CARD_TYPE)) {
   customElements.define(CARD_TYPE, MimbarPrayerScreenCard);
+}
+if (!customElements.get(LEGACY_CARD_TYPE)) {
+  customElements.define(LEGACY_CARD_TYPE, LegacyMimbarCard);
 }
 
 window.customCards = window.customCards || [];
 if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
   window.customCards.push({
     type: CARD_TYPE,
-    name: "Paparan Mimbar Waktu Solat",
+    name: "Skrin Solat",
     description: "Paparan skrin penuh waktu solat Malaysia",
     preview: false,
   });
