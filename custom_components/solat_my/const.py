@@ -7,7 +7,7 @@ MALAYSIA_TZ = ZoneInfo("Asia/Kuala_Lumpur")
 DOMAIN = "solat_my"
 
 API_BASE_URL = "https://solat.my/api"
-API_MONTHLY_ENDPOINT = "/monthly/{zone}"
+API_MONTHLY_ENDPOINT = "/monthly/{zone}/{month}?year={year}"
 API_LOCATIONS_ENDPOINT = "/locations"
 
 DEFAULT_SCAN_INTERVAL = 3600  # 1 hour in seconds

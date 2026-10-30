@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
 
+# After an error, try again this soon instead of waiting for SCAN_INTERVAL.
+RETRY_AFTER_ERROR = 300  # seconds
+
 # JAKIM uses Malay month abbreviations (lang=ms_my) since 2026.
 # Map them to English so strptime %b can parse them.
 _MS_TO_EN = {
@@ -59,8 +62,9 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.zone = initial_zone
         self._cancel_midnight: Callable | None = None
-        self._monthly_cache: dict[str, Any] | None = None
-        self._cache_key: tuple[str, int, int] | None = None  # (zone, year, month)
+        # (zone, year, month) → API response. Holds this month and, on the
+        # last day of the month, next month, so midnight needs no network.
+        self._months: dict[tuple[str, int, int], dict[str, Any]] = {}
 
     def async_setup(self) -> None:
         """Register a midnight listener to refresh data at the start of each new day."""
@@ -82,52 +86,73 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_zone(self, zone: str) -> None:
         """Change the active zone and immediately refresh data."""
         self.zone = zone
-        self._monthly_cache = None
-        self._cache_key = None
+        self._months.clear()
         await self.async_refresh()
 
-    async def _async_fetch_month(self, zone: str) -> dict[str, Any]:
+    async def _async_fetch_month(self, zone: str, year: int, month: int) -> dict[str, Any]:
         """Fetch one month of prayer times for a zone from the solat.my API."""
-        url = API_BASE_URL + API_MONTHLY_ENDPOINT.format(zone=zone)
+        url = API_BASE_URL + API_MONTHLY_ENDPOINT.format(zone=zone, month=month, year=year)
         session = async_get_clientsession(self.hass)
         try:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
                 if response.status != 200:
-                    raise UpdateFailed(f"Error fetching prayer times: HTTP {response.status}")
+                    raise UpdateFailed(
+                        f"Error fetching prayer times: HTTP {response.status}",
+                        retry_after=RETRY_AFTER_ERROR,
+                    )
                 data = await response.json()
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise UpdateFailed(f"Error communicating with solat.my API: {err}") from err
+            raise UpdateFailed(
+                f"Error communicating with solat.my API: {err}",
+                retry_after=RETRY_AFTER_ERROR,
+            ) from err
 
         if data.get("status") != "OK!":
-            raise UpdateFailed(f"API returned error status: {data.get('status')}")
+            raise UpdateFailed(
+                f"API returned error status: {data.get('status')}",
+                retry_after=RETRY_AFTER_ERROR,
+            )
         if not data.get("prayerTime"):
-            raise UpdateFailed("No prayer time data received from API")
+            raise UpdateFailed(
+                "No prayer time data received from API", retry_after=RETRY_AFTER_ERROR
+            )
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Return today's prayer times, fetching from API only when the zone or month changes."""
         today_date = dt_util.now(MALAYSIA_TZ).date()
-        cache_key = (self.zone, today_date.year, today_date.month)
+        key = (self.zone, today_date.year, today_date.month)
 
-        if self._monthly_cache is None or self._cache_key != cache_key:
-            _LOGGER.debug(
-                "Fetching monthly prayer times for zone %s (%d-%02d)", *cache_key
-            )
-            data = await self._async_fetch_month(self.zone)
-            self._monthly_cache = data
-            self._cache_key = cache_key
+        if key not in self._months:
+            _LOGGER.debug("Fetching monthly prayer times for zone %s (%d-%02d)", *key)
+            self._months[key] = await self._async_fetch_month(*key)
         else:
             _LOGGER.debug("Using cached monthly prayer times for zone %s", self.zone)
-            data = self._monthly_cache
+        data = self._months[key]
 
         prayer_times = data.get("prayerTime", [])
         today = next(
-            (
-                pt for pt in prayer_times
-                if _parse_date(pt.get("date", "")) == today_date
-            ),
-            prayer_times[0],
+            (pt for pt in prayer_times if _parse_date(pt.get("date", "")) == today_date),
+            None,
         )
+        if today is None:
+            self._months.pop(key, None)
+            raise UpdateFailed(
+                f"No prayer times for {today_date.isoformat()} in zone {self.zone}",
+                retry_after=RETRY_AFTER_ERROR,
+            )
+
+        # On the last day of the month, also fetch next month. A failed
+        # prefetch must never fail the update.
+        tomorrow = today_date + timedelta(days=1)
+        next_key = (self.zone, tomorrow.year, tomorrow.month)
+        if next_key != key and next_key not in self._months:
+            try:
+                self._months[next_key] = await self._async_fetch_month(*next_key)
+            except UpdateFailed as err:
+                _LOGGER.debug("Could not prefetch %s: %s", next_key, err)
+        self._months = {k: v for k, v in self._months.items() if k in (key, next_key)}
+
         date_str = today.get("date", "")
         parsed: dict[str, datetime | None] = {}
 
