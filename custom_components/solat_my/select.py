@@ -58,8 +58,9 @@ class ZoneSelect(RestoreEntity, SelectEntity):
     def __init__(self, coordinator: SolatMyCoordinator, entry: ConfigEntry) -> None:
         """Initialize the zone select entity."""
         self._coordinator = coordinator
+        self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_zon"
-        self._attr_current_option = entry.data.get(CONF_ZONE)
+        self._attr_current_option = coordinator.zone
         self._attr_device_info = _make_device_info(entry)
 
     @property
@@ -70,20 +71,29 @@ class ZoneSelect(RestoreEntity, SelectEntity):
         }
 
     async def async_added_to_hass(self) -> None:
-        """Restore last zone on startup."""
+        """Move a zone kept only in restore state (before 1.0.6) into the config entry."""
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_state()) is not None:
-            if last_state.state in ZONES:
-                self._attr_current_option = last_state.state
-                # Sync coordinator in case it differs from restored state
-                if self._coordinator.zone != last_state.state:
-                    self._coordinator.zone = last_state.state
+        last_state = await self.async_get_last_state()
+        if (
+            last_state is not None
+            and last_state.state in ZONES
+            and last_state.state != self._coordinator.zone
+        ):
+            await self._async_apply_zone(last_state.state)
 
     async def async_select_option(self, option: str) -> None:
-        """Handle zone change — update coordinator and refresh all sensors."""
-        self._attr_current_option = option
+        """Handle zone change — persist it, then refresh all sensors."""
+        await self._async_apply_zone(option)
+
+    async def _async_apply_zone(self, zone: str) -> None:
+        """Save the zone in the config entry and refresh the coordinator."""
+        self._attr_current_option = zone
+        if self._entry.data.get(CONF_ZONE) != zone:
+            self.hass.config_entries.async_update_entry(
+                self._entry, data={**self._entry.data, CONF_ZONE: zone}
+            )
         self.async_write_ha_state()
-        await self._coordinator.async_set_zone(option)
+        await self._coordinator.async_set_zone(zone)
 
 
 class MediaPlayerSelect(RestoreEntity, SelectEntity):
