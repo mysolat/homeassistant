@@ -87,11 +87,7 @@ class PrayerTimeSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
     def native_value(self) -> datetime | None:
         if self.coordinator.data is None:
             return None
-        dt_naive = self.coordinator.data["prayer_times"].get(self._prayer)
-        if dt_naive is None:
-            return None
-        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
-        return dt_naive.replace(tzinfo=local_tz) if local_tz else dt_naive
+        return self.coordinator.data["prayer_times"].get(self._prayer)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -192,15 +188,13 @@ class NextPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
         if self.coordinator.data is None:
             return None, None
         now = dt_util.now()
-        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
         for prayer in [PRAYER_FAJR, PRAYER_SYURUK, PRAYER_DHUHA, PRAYER_DHUHR,
                        PRAYER_ASR, PRAYER_MAGHRIB, PRAYER_ISHA]:
-            dt_naive = self.coordinator.data["prayer_times"].get(prayer)
-            if dt_naive is None:
+            prayer_at = self.coordinator.data["prayer_times"].get(prayer)
+            if prayer_at is None:
                 continue
-            dt_aware = dt_naive.replace(tzinfo=local_tz) if local_tz else dt_naive
-            if dt_aware > now:
-                return prayer, dt_aware
+            if prayer_at > now:
+                return prayer, prayer_at
         return None, None
 
     @property
@@ -264,15 +258,13 @@ class CurrentPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
         if self.coordinator.data is None:
             return None
         now = dt_util.now()
-        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
         current = None
         for prayer in [PRAYER_IMSAK, PRAYER_FAJR, PRAYER_SYURUK, PRAYER_DHUHA,
                        PRAYER_DHUHR, PRAYER_ASR, PRAYER_MAGHRIB, PRAYER_ISHA]:
-            dt_naive = self.coordinator.data["prayer_times"].get(prayer)
-            if dt_naive is None:
+            prayer_at = self.coordinator.data["prayer_times"].get(prayer)
+            if prayer_at is None:
                 continue
-            dt_aware = dt_naive.replace(tzinfo=local_tz) if local_tz else dt_naive
-            if now >= dt_aware:
+            if now >= prayer_at:
                 current = prayer
         return PRAYER_NAMES_MS.get(current, current.capitalize()) if current else "Sebelum Imsak"
 
