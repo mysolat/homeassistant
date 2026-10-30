@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.13] - 2026-10-30
 
 ### Changed
 - After Isyak, **Waktu Solat Seterusnya** shows tomorrow's Subuh with its time and countdown, plus a `tomorrow: true` attribute, instead of `Selesai`.
