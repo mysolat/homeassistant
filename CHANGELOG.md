@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- The zone chosen with `select.waktu_solat_zon` now survives a restart. Before, the sensors went back to the setup zone's times until the next month.
+- Prayer times are always Malaysian time (`Asia/Kuala_Lumpur`), whatever time zone Home Assistant uses.
+- The `bearing` attribute shows `291° 7′ 23″` instead of HTML entities.
+
 ## [1.0.5] - 2026-09-19
 
 ### Added
