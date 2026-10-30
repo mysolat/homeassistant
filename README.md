@@ -8,7 +8,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 ## Features
 
-- **23 entities** created automatically per device — no helpers needed:
+- **25 entities** created automatically per device — no helpers needed:
   - **8 prayer time sensors** (Imsak, Subuh, Syuruk, Dhuha, Zohor, Asar, Maghrib, Isyak)
   - **Tarikh Hijri** — formatted Hijri date with month name in Malay
   - **Waktu Solat Seterusnya** — next upcoming prayer with countdown
@@ -18,6 +18,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
   - **Mod Pengumuman Azan** — announcement mode before azan (`tts` or `audio`)
   - **Kelantangan Azan** — volume slider (0.0–1.0)
   - **Fail Audio Azan / Subuh / Doa** — configurable audio filenames
+  - **Uji Azan / Henti Azan** — buttons that play the azan now, or stop it
   - **Skrin Solat display controls** — background colour, image visibility, clarity, local image, and 12h/24h time for the full-screen Skrin Solat card
 - Supports **59 Malaysian zones** (all JAKIM zones + W.P.)
 - UI-based setup — just enter a name and pick a starting zone
@@ -49,7 +50,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 3. Enter a **Device Name** (default: `Waktu Solat`) — this becomes the entity ID prefix
 4. Select the **starting zone** (e.g., `SGR01 — Selangor - Gombak, Petaling, ...`)
    The zone is pre-selected from your Home Assistant home location. The integration sends that location, rounded to about 1 km, to solat.my once. You can choose a different zone.
-5. Click Submit — all 23 entities appear immediately
+5. Click Submit — all 25 entities appear immediately
 
 > **To change zone later:** go to the device page and change the **Zon** select entity. All prayer time sensors update instantly without a restart.
 
@@ -89,6 +90,13 @@ The following entities are created under device **"Waktu Solat"** (default name)
 | `number.waktu_solat_kejelasan_latar_skrin_solat` | Kejelasan Latar Skrin Solat | Skrin Solat background clarity (0–100 slider) |
 | `text.waktu_solat_imej_latar_skrin_solat` | Imej Latar Skrin Solat | Optional `/local/...` image that replaces the courtyard |
 | `select.waktu_solat_format_masa_skrin_solat` | Format Masa Skrin Solat | Skrin Solat time format (`24h` or `12h`) |
+
+### Buttons
+
+| Entity ID | Name | Description |
+|-----------|------|-------------|
+| `button.waktu_solat_uji_azan` | Uji Azan | Plays the first file of **Fail Audio Azan** now, on **Pemain Media Azan** at **Kelantangan Azan** volume. Use it to check your setup without waiting for a prayer |
+| `button.waktu_solat_henti_azan` | Henti Azan | Stops **Pemain Media Azan** |
 
 ## Dashboard Cards
 

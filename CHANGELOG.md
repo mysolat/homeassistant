@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Uji Azan** and **Henti Azan** buttons play the configured azan now, or stop it, so you can check the player, volume and file without waiting for a prayer.
+
 ### Changed
 - The full-screen display is now called **Skrin Solat**. Its card type is `custom:solat-my-skrin-solat-card`. The old type `custom:solat-my-mimbar-card` still works. Existing entity IDs stay the same, and only their names change.
 
