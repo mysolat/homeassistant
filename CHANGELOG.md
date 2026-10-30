@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - After an API error the integration retries in 5 minutes instead of 12 hours.
 - If the API reply lacks today's date, the sensors go unavailable and the log names the date. Before, they silently showed another day's times.
 
+### Removed
+- The empty **Configure** (options) dialog. On current Home Assistant it failed to open, and on older versions submitting it erased the saved azan media player. Change the zone with `select.waktu_solat_zon`.
+
 ## [1.0.5] - 2026-09-19
 
 ### Added
