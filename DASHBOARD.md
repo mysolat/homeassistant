@@ -33,7 +33,7 @@ cards:
     secondary: >-
       {% set next_p = states('sensor.waktu_solat_waktu_solat_seterusnya') %}
       {% set cd = state_attr('sensor.waktu_solat_waktu_solat_seterusnya', 'countdown') %}
-      {% if next_p not in ('Selesai', 'unknown', 'unavailable') %} Seterusnya {{ next_p }} dalam {{ cd }} {% else %} Selesai {% endif %}
+      {% if next_p not in ('unknown', 'unavailable') %} Seterusnya {{ next_p }} dalam {{ cd }} {% else %} Tiada data {% endif %}
     icon: ''
     layout: vertical
     badge_icon: mdi:circle
@@ -141,7 +141,7 @@ cards:
     secondary: >-
       {% set next_p = states('sensor.waktu_solat_waktu_solat_seterusnya') %}
       {% set cd = state_attr('sensor.waktu_solat_waktu_solat_seterusnya', 'countdown') %}
-      {% if next_p not in ('Selesai', 'unknown', 'unavailable') %} Seterusnya {{ next_p }} dalam {{ cd }} {% else %} Selesai {% endif %}
+      {% if next_p not in ('unknown', 'unavailable') %} Seterusnya {{ next_p }} dalam {{ cd }} {% else %} Tiada data {% endif %}
     icon: ''
     layout: vertical
     badge_icon: mdi:circle

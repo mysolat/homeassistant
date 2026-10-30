@@ -72,7 +72,7 @@ The following entities are created under device **"Waktu Solat"** (default name)
 | `sensor.waktu_solat_maghrib` | Maghrib | Waktu Maghrib (timestamp) |
 | `sensor.waktu_solat_isyak` | Isyak | Waktu Isyak (timestamp) |
 | `sensor.waktu_solat_tarikh_hijri` | Tarikh Hijri | Tarikh Hijri berformat |
-| `sensor.waktu_solat_waktu_solat_seterusnya` | Waktu Solat Seterusnya | Waktu solat seterusnya + kiraan detik |
+| `sensor.waktu_solat_waktu_solat_seterusnya` | Waktu Solat Seterusnya | Waktu solat seterusnya + kiraan detik (selepas Isyak: Subuh esok) |
 | `sensor.waktu_solat_waktu_solat_semasa` | Waktu Solat Semasa | Tempoh waktu solat semasa |
 
 ### Configuration Entities
