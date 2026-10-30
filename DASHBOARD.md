@@ -14,6 +14,127 @@ Dashboard cards for displaying prayer times. Layouts 1 and 2 require **Mushroom 
 
 ---
 
+## Layout 0: Built-in cards only (no HACS)
+
+Works on any Home Assistant 2024.10 or newer, with no custom cards.
+
+Open a dashboard → **pencil icon** → **three dots** → **Raw configuration editor**, then paste this block. It replaces all existing views, so to keep them, paste only the view under your existing `views:`.
+
+```yaml
+views:
+  - title: Waktu Solat
+    path: waktu-solat
+    type: sections
+    max_columns: 3
+    sections:
+      # Section 1: now and next
+      - type: grid
+        cards:
+          - type: heading
+            heading: Waktu Solat
+            icon: mdi:mosque
+            badges:
+              - type: entity
+                entity: sensor.waktu_solat_tarikh_hijri
+                show_state: true
+          - type: tile
+            entity: sensor.waktu_solat_waktu_solat_seterusnya
+            name: Seterusnya
+            state_content:
+              - state
+              - time_24h
+              - countdown
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: sensor.waktu_solat_waktu_solat_semasa
+            name: Semasa
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: calendar.waktu_solat_kalendar_solat
+            name: Kalendar
+            grid_options:
+              columns: 6
+      # Section 2: today's times
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hari ini
+            icon: mdi:clock-outline
+          - type: entities
+            entities:
+              - entity: sensor.waktu_solat_imsak
+                name: Imsak
+                format: time
+              - entity: sensor.waktu_solat_subuh
+                name: Subuh
+                format: time
+              - entity: sensor.waktu_solat_syuruk
+                name: Syuruk
+                format: time
+              - entity: sensor.waktu_solat_dhuha
+                name: Dhuha
+                format: time
+              - entity: sensor.waktu_solat_zohor
+                name: Zohor
+                format: time
+              - entity: sensor.waktu_solat_asar
+                name: Asar
+                format: time
+              - entity: sensor.waktu_solat_maghrib
+                name: Maghrib
+                format: time
+              - entity: sensor.waktu_solat_isyak
+                name: Isyak
+                format: time
+      # Section 3: azan settings and test buttons
+      - type: grid
+        cards:
+          - type: heading
+            heading: Tetapan azan
+            icon: mdi:bullhorn
+          - type: tile
+            entity: select.waktu_solat_zon
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: select.waktu_solat_pemain_media_azan
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: number.waktu_solat_kelantangan_azan
+            features:
+              - type: numeric-input
+                style: slider
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: select.waktu_solat_mod_pengumuman_azan
+            features:
+              - type: select-options
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: button.waktu_solat_uji_main_azan
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: button.waktu_solat_uji_henti_azan
+            grid_options:
+              columns: 6
+          - type: entities
+            title: Fail audio
+            entities:
+              - text.waktu_solat_fail_audio_azan
+              - text.waktu_solat_fail_audio_azan_subuh
+              - text.waktu_solat_fail_doa_selepas_azan
+```
+
+Renamed your device? Replace `waktu_solat` in the entity IDs.
+
+---
+
 ## Layout 1: The Premium Grid (3×2)
 
 A balanced, dashboard-friendly view with a prominent current time badge and a 3×2 grid of prayer times. Features live colored icon badges for 'Current' (teal check) and 'Next' (orange timer) prayers.
