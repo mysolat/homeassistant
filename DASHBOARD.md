@@ -1,6 +1,6 @@
 # Dashboard — Waktu Solat Malaysia (solat.my)
 
-Dashboard cards for displaying prayer times. Layouts 1 and 2 require **Mushroom Cards** (HACS); the full-screen Mimbar card does not.
+Dashboard cards for displaying prayer times. Layouts 1 and 2 require **Mushroom Cards** (HACS); the full-screen Skrin Solat card does not.
 
 > **Note:** Replace `waktu_solat` in entity IDs if you renamed your device.
 
@@ -220,23 +220,25 @@ cards:
 
 ---
 
-## Paparan Mimbar Skrin Penuh
+## Skrin Solat
 
 A full-screen prayer display for a TV or kiosk. The card is built into the integration and loads by itself. After installing or updating, restart Home Assistant and hard-refresh your browser.
 
 ### Set up
 
-1. Open **Settings → Dashboards → Add dashboard → New dashboard from scratch**, name it `Mimbar`, and open it.
+Installed before 1.0.10? Your entities keep their old IDs (`…_mimbar`), and `custom:solat-my-mimbar-card` still works.
+
+1. Open **Settings → Dashboards → Add dashboard → New dashboard from scratch**, name it `Skrin Solat`, and open it.
 2. Click the pencil (Edit), then **⋮ → Raw configuration editor**. Replace everything with this and **Save**:
 
 ```yaml
-title: Mimbar Waktu Solat
+title: Skrin Solat
 views:
-  - title: Mimbar
-    path: mimbar
+  - title: Skrin Solat
+    path: skrin-solat
     panel: true
     cards:
-      - type: custom:solat-my-mimbar-card
+      - type: custom:solat-my-skrin-solat-card
         title: Waktu Solat
         message: Sila rapatkan saf dan matikan nada telefon.
         fasting_context: auto
@@ -267,13 +269,13 @@ Renamed your device? Replace `waktu_solat` in the entity IDs.
 Want more? The card also supports `location`, an Iqamah countdown (`iqama`), adhan and quiet-time lengths, and rotating notices (`slides`). To use them, follow the same steps but paste this whole dashboard in step 2 instead. The Ramadan cue needs `imsak` and a Hijri entity whose `month` attribute is `09`.
 
 ```yaml
-title: Mimbar Waktu Solat
+title: Skrin Solat
 views:
-  - title: Mimbar
-    path: mimbar
+  - title: Skrin Solat
+    path: skrin-solat
     panel: true
     cards:
-      - type: custom:solat-my-mimbar-card
+      - type: custom:solat-my-skrin-solat-card
         entities:
           subuh: sensor.waktu_solat_subuh
           syuruk: sensor.waktu_solat_syuruk
@@ -288,7 +290,7 @@ views:
         title: Masjid Al-Hidayah
         location: Putrajaya
         message: Sila rapatkan saf dan matikan nada telefon.
-        # time_format: 12h  # optional; overrides the device's Format Masa Mimbar
+        # time_format: 12h  # optional; overrides the device's Format Masa Skrin Solat
         fasting_context: auto
         background:
           source: integration
@@ -315,7 +317,7 @@ views:
 
 ### Background choices
 
-For the normal setup, open the Solat.my device page and use **Warna Latar Mimbar**, **Paparan Latar Mimbar**, **Kejelasan Latar Mimbar** (0–100), **Imej Latar Mimbar**, and **Format Masa Mimbar**. The colour selector offers `forest`, `midnight`, `slate`, `burgundy`, and `indigo`; it never replaces the included Mimbar courtyard. **Paparan Latar Mimbar** turns that image layer on or off. A valid owner-provided `/local/...` value in **Imej Latar Mimbar** replaces the courtyard while it is on. **Format Masa Mimbar** offers `24h` and `12h`; an explicit `time_format: 24h` or `time_format: 12h` in the card YAML takes priority. These controls affect Mimbar cards mapped to that device and work without editing dashboard YAML.
+For the normal setup, open the Solat.my device page and use **Warna Latar Skrin Solat**, **Paparan Latar Skrin Solat**, **Kejelasan Latar Skrin Solat** (0–100), **Imej Latar Skrin Solat**, and **Format Masa Skrin Solat**. The colour selector offers `forest`, `midnight`, `slate`, `burgundy`, and `indigo`; it never replaces the included courtyard. **Paparan Latar Skrin Solat** turns that image layer on or off. A valid owner-provided `/local/...` value in **Imej Latar Skrin Solat** replaces the courtyard while it is on. **Format Masa Skrin Solat** offers `24h` and `12h`; an explicit `time_format: 24h` or `time_format: 12h` in the card YAML takes priority. These controls affect Skrin Solat cards mapped to that device and work without editing dashboard YAML.
 
 Home Assistant's view-level background and opacity controls affect wallpaper behind the dashboard view. They do not change this full-screen card's background.
 

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- The full-screen display is now called **Skrin Solat**. Its card type is `custom:solat-my-skrin-solat-card`. The old type `custom:solat-my-mimbar-card` still works. Existing entity IDs stay the same, and only their names change.
+
 ### Fixed
 - The azan media player list now updates only when a media player is added or removed. Before, it ran on every state change in Home Assistant.
 
