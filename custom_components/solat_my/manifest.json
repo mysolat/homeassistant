@@ -2,7 +2,7 @@
   "domain": "solat_my",
   "name": "Waktu Solat Malaysia (solat.my)",
   "after_dependencies": ["frontend", "http"],
-  "codeowners": ["mkhairi"],
+  "codeowners": ["@mkhairi"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/mysolat/homeassistant",
