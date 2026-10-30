@@ -1,11 +1,12 @@
 {
     "domain": "solat_my",
     "name": "Waktu Solat Malaysia (solat.my)",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "config_flow": true,
     "documentation": "https://github.com/mysolat/homeassistant",
     "issue_tracker": "https://github.com/mysolat/homeassistant/issues",
     "dependencies": [],
+  "after_dependencies": ["frontend", "http"],
     "codeowners": ["mkhairi"],
     "requirements": [],
     "iot_class": "cloud_polling"

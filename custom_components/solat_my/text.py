@@ -21,6 +21,7 @@ async def async_setup_entry(
             AudioFileText(entry, key="azan", default="azan1.mp3, azan2.mp3"),
             AudioFileText(entry, key="azan_subuh", default="azan_subuh.mp3"),
             AudioFileText(entry, key="doa", default="doa_selepas_azan.mp3"),
+            MimbarBackgroundImageText(entry),
         ]
     )
 
@@ -75,3 +76,37 @@ class AudioFileText(RestoreEntity, TextEntity):
     def filenames(self) -> list[str]:
         """Return the list of configured filenames (stripped)."""
         return [f.strip() for f in (self._attr_native_value or "").split(",") if f.strip()]
+
+
+class MimbarBackgroundImageText(RestoreEntity, TextEntity):
+    """Configure the local image used by the Mimbar image background."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Imej Latar Mimbar"
+    _attr_icon = "mdi:image"
+    _attr_mode = TextMode.TEXT
+    _attr_native_min = 0
+    _attr_native_max = 255
+    _attr_native_value = ""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the Mimbar local-image path setting."""
+        self._attr_unique_id = f"{entry.entry_id}_mimbar_background_image"
+        self._attr_device_info = _make_device_info(entry)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore a saved local image path only."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            value = last_state.state.strip()
+            if value.startswith("/local/"):
+                self._attr_native_value = value
+        self.async_write_ha_state()
+
+    async def async_set_value(self, value: str) -> None:
+        """Set an optional local image path without permitting remote content."""
+        path = value.strip()
+        if path and not path.startswith("/local/"):
+            raise ValueError("Imej Latar Mimbar mesti menggunakan laluan /local/")
+        self._attr_native_value = path
+        self.async_write_ha_state()

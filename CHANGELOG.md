@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-09-19
+
+### Added
+- **Paparan Mimbar Skrin Penuh** — full-screen `custom:solat-my-mimbar-card` for TVs and kiosk dashboards: local next-prayer countdown (including the after-Isyak rollover), current and next prayer highlight, optional Imsak/Dhuha and Ramadan rail, adhan/iqamah/quiet-time lifecycle, and message or image slides. Malay-only; it never controls azan audio.
+- Five device controls for the card: `select.waktu_solat_warna_latar_mimbar` (five colour presets), `select.waktu_solat_paparan_latar_mimbar` (background image on/off), `number.waktu_solat_kejelasan_latar_mimbar` (0–100), `text.waktu_solat_imej_latar_mimbar` (a `/local/...` image), and `select.waktu_solat_format_masa_mimbar` (`24h` or `12h`, shown as AM/PM).
+- The integration now serves the card and loads it on every dashboard automatically; no dashboard resource is needed. Its URL carries a hash of the card files, so browsers pick up updates.
+- DASHBOARD.md: paste-ready Mimbar dashboard using the default entity IDs, with an optional extended version (Iqamah countdown, notices).
+
+### Changed
+- `manifest.json` now lists `frontend` and `http` under `after_dependencies`.
+- README entity counts corrected to 23 per device and the new controls added to the entity tables.
+
+### Upgrade note
+- If you added `/api/solat_my/mimbar/solat-my-mimbar-card.js` as a dashboard resource by hand, remove it, or the card loads twice. Restart Home Assistant and hard-refresh your browser after updating.
+
 ## [1.0.3] - 2026-05-10
 
 ### Added

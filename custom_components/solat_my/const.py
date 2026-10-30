@@ -14,6 +14,20 @@ CONF_ZONE = "zone"
 DEFAULT_NAME = "Waktu Solat"
 DEFAULT_ZONE = "SGR01"
 
+MIMBAR_BACKGROUND_OPTIONS = [
+    "forest",
+    "midnight",
+    "slate",
+    "burgundy",
+    "indigo",
+]
+DEFAULT_MIMBAR_BACKGROUND = "midnight"
+MIMBAR_BACKGROUND_VISIBILITY_OPTIONS = ["on", "off"]
+DEFAULT_MIMBAR_BACKGROUND_VISIBILITY = "on"
+DEFAULT_MIMBAR_BACKGROUND_OPACITY = 76
+MIMBAR_TIME_FORMAT_OPTIONS = ["24h", "12h"]
+DEFAULT_MIMBAR_TIME_FORMAT = "24h"
+
 # Prayer time keys from API
 PRAYER_IMSAK = "imsak"
 PRAYER_FAJR = "fajr"

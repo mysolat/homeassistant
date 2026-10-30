@@ -8,7 +8,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_ZONE, DOMAIN, ZONES
+from .const import (
+    CONF_ZONE,
+    DEFAULT_MIMBAR_BACKGROUND,
+    DEFAULT_MIMBAR_BACKGROUND_VISIBILITY,
+    DEFAULT_MIMBAR_TIME_FORMAT,
+    DOMAIN,
+    MIMBAR_BACKGROUND_OPTIONS,
+    MIMBAR_BACKGROUND_VISIBILITY_OPTIONS,
+    MIMBAR_TIME_FORMAT_OPTIONS,
+    ZONES,
+)
 from .coordinator import SolatMyCoordinator
 from .sensor import _make_device_info
 
@@ -25,6 +35,9 @@ async def async_setup_entry(
             ZoneSelect(coordinator, entry),
             MediaPlayerSelect(hass, entry),
             AnnouncementModeSelect(entry),
+            MimbarBackgroundSelect(entry),
+            MimbarBackgroundVisibilitySelect(entry),
+            MimbarTimeFormatSelect(entry),
         ]
     )
 
@@ -190,5 +203,89 @@ class AnnouncementModeSelect(RestoreEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Handle mode selection."""
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+
+class MimbarBackgroundSelect(RestoreEntity, SelectEntity):
+    """Select the shared Mimbar display colour for this device."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Warna Latar Mimbar"
+    _attr_icon = "mdi:palette"
+    _attr_options = MIMBAR_BACKGROUND_OPTIONS
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the Mimbar background colour selector."""
+        self._attr_unique_id = f"{entry.entry_id}_mimbar_background"
+        self._attr_device_info = _make_device_info(entry)
+        self._attr_current_option = DEFAULT_MIMBAR_BACKGROUND
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last selected background colour."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            if last_state.state in self._attr_options:
+                self._attr_current_option = last_state.state
+        self.async_write_ha_state()
+
+    async def async_select_option(self, option: str) -> None:
+        """Update the shared Mimbar background colour."""
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+
+class MimbarBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
+    """Toggle the shared Mimbar image background for this device."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Paparan Latar Mimbar"
+    _attr_icon = "mdi:image-outline"
+    _attr_options = MIMBAR_BACKGROUND_VISIBILITY_OPTIONS
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the Mimbar background visibility selector."""
+        self._attr_unique_id = f"{entry.entry_id}_mimbar_background_visibility"
+        self._attr_device_info = _make_device_info(entry)
+        self._attr_current_option = DEFAULT_MIMBAR_BACKGROUND_VISIBILITY
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last selected background visibility."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            if last_state.state in self._attr_options:
+                self._attr_current_option = last_state.state
+        self.async_write_ha_state()
+
+    async def async_select_option(self, option: str) -> None:
+        """Update the shared Mimbar background visibility."""
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+
+class MimbarTimeFormatSelect(RestoreEntity, SelectEntity):
+    """Select the shared Mimbar clock format for this device."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Format Masa Mimbar"
+    _attr_icon = "mdi:clock-outline"
+    _attr_options = MIMBAR_TIME_FORMAT_OPTIONS
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the Mimbar time-format selector."""
+        self._attr_unique_id = f"{entry.entry_id}_mimbar_time_format"
+        self._attr_device_info = _make_device_info(entry)
+        self._attr_current_option = DEFAULT_MIMBAR_TIME_FORMAT
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last selected time format."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            if last_state.state in self._attr_options:
+                self._attr_current_option = last_state.state
+        self.async_write_ha_state()
+
+    async def async_select_option(self, option: str) -> None:
+        """Update the shared Mimbar time format."""
         self._attr_current_option = option
         self.async_write_ha_state()

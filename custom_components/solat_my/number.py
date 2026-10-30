@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN
+from .const import DEFAULT_MIMBAR_BACKGROUND_OPACITY, DOMAIN
 from .sensor import _make_device_info
 
 
@@ -17,7 +17,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities."""
-    async_add_entities([AzanVolumeNumber(entry)])
+    async_add_entities([AzanVolumeNumber(entry), MimbarBackgroundOpacityNumber(entry)])
 
 
 class AzanVolumeNumber(RestoreEntity, NumberEntity):
@@ -49,4 +49,38 @@ class AzanVolumeNumber(RestoreEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the volume value."""
         self._attr_native_value = round(value, 2)
+        self.async_write_ha_state()
+
+
+class MimbarBackgroundOpacityNumber(RestoreEntity, NumberEntity):
+    """Control the visible strength of a Mimbar card background."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Kejelasan Latar Mimbar"
+    _attr_icon = "mdi:image-outline"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
+    _attr_native_step = 1
+    _attr_mode = NumberMode.SLIDER
+    _attr_native_value = DEFAULT_MIMBAR_BACKGROUND_OPACITY
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the Mimbar background visibility slider."""
+        self._attr_unique_id = f"{entry.entry_id}_mimbar_background_opacity"
+        self._attr_device_info = _make_device_info(entry)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last selected visibility percentage."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            try:
+                value = int(float(last_state.state))
+            except (ValueError, TypeError):
+                value = DEFAULT_MIMBAR_BACKGROUND_OPACITY
+            self._attr_native_value = min(max(value, 0), 100)
+        self.async_write_ha_state()
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the visible strength as a whole percentage."""
+        self._attr_native_value = min(max(round(value), 0), 100)
         self.async_write_ha_state()

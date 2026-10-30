@@ -1,6 +1,6 @@
 # Dashboard — Waktu Solat Malaysia (solat.my)
 
-Dashboard cards for displaying prayer times. Requires **Mushroom Cards** (HACS).
+Dashboard cards for displaying prayer times. Layouts 1 and 2 require **Mushroom Cards** (HACS); the full-screen Mimbar card does not.
 
 > **Note:** Replace `waktu_solat` in entity IDs if you renamed your device.
 
@@ -216,4 +216,124 @@ cards:
     icon: ''
     layout: vertical
     tap_action: { action: none }
+```
+
+---
+
+## Paparan Mimbar Skrin Penuh
+
+A full-screen prayer display for a TV or kiosk. The card is built into the integration and loads by itself. After installing or updating, restart Home Assistant and hard-refresh your browser.
+
+### Set up
+
+1. Open **Settings → Dashboards → Add dashboard → New dashboard from scratch**, name it `Mimbar`, and open it.
+2. Click the pencil (Edit), then **⋮ → Raw configuration editor**. Replace everything with this and **Save**:
+
+```yaml
+title: Mimbar Waktu Solat
+views:
+  - title: Mimbar
+    path: mimbar
+    panel: true
+    cards:
+      - type: custom:solat-my-mimbar-card
+        title: Waktu Solat
+        message: Sila rapatkan saf dan matikan nada telefon.
+        fasting_context: auto
+        entities:
+          imsak: sensor.waktu_solat_imsak
+          subuh: sensor.waktu_solat_subuh
+          syuruk: sensor.waktu_solat_syuruk
+          dhuha: sensor.waktu_solat_dhuha
+          zohor: sensor.waktu_solat_zohor
+          asar: sensor.waktu_solat_asar
+          maghrib: sensor.waktu_solat_maghrib
+          isyak: sensor.waktu_solat_isyak
+          hijri: sensor.waktu_solat_tarikh_hijri
+          current: sensor.waktu_solat_waktu_solat_semasa
+        background:
+          source: integration
+```
+
+3. Choose the colour, image, and 12h/24h format on the Solat.my device page (see [Background choices](#background-choices)).
+
+Renamed your device? Replace `waktu_solat` in the entity IDs.
+
+**Troubleshooting**
+
+- **Card missing** ("Custom element doesn't exist"): restart Home Assistant and hard-refresh. If it is still missing, add it by hand: turn on **Advanced mode** in your profile, then **Settings → Dashboards → ⋮ → Resources → Add resource**, URL `/api/solat_my/mimbar/solat-my-mimbar-card.js`, type **JavaScript module**.
+- **Upgrading from an earlier build** where you added that resource by hand: delete it, or the card loads twice.
+
+Want more? The card also supports `location`, an Iqamah countdown (`iqama`), adhan and quiet-time lengths, and rotating notices (`slides`). To use them, follow the same steps but paste this whole dashboard in step 2 instead. The Ramadan cue needs `imsak` and a Hijri entity whose `month` attribute is `09`.
+
+```yaml
+title: Mimbar Waktu Solat
+views:
+  - title: Mimbar
+    path: mimbar
+    panel: true
+    cards:
+      - type: custom:solat-my-mimbar-card
+        entities:
+          subuh: sensor.waktu_solat_subuh
+          syuruk: sensor.waktu_solat_syuruk
+          zohor: sensor.waktu_solat_zohor
+          asar: sensor.waktu_solat_asar
+          maghrib: sensor.waktu_solat_maghrib
+          isyak: sensor.waktu_solat_isyak
+          hijri: sensor.waktu_solat_tarikh_hijri
+          current: sensor.waktu_solat_waktu_solat_semasa
+          imsak: sensor.waktu_solat_imsak
+          dhuha: sensor.waktu_solat_dhuha
+        title: Masjid Al-Hidayah
+        location: Putrajaya
+        message: Sila rapatkan saf dan matikan nada telefon.
+        # time_format: 12h  # optional; overrides the device's Format Masa Mimbar
+        fasting_context: auto
+        background:
+          source: integration
+        iqama:
+          subuh: 20
+          zohor: 15
+          asar: 15
+          maghrib: 10
+          isyak: 15
+          jumaat: 30
+        adhan_duration: 2
+        silence_duration: 15
+        slides:
+          - type: message
+            ms: Sila kekalkan kebersihan dan ketenangan masjid.
+          # Image slides need a file under /config/www (served as /local/...):
+          # - type: image
+          #   src: /local/makluman-program.jpg
+          #   alt: Makluman program masjid
+        slide_interval_seconds: 60
+```
+
+`iqama.jumaat` replaces the Zohor offset on Friday and changes its display label to `Jumaat`. Omit an Iqamah key when the mosque has no local congregation offset. Backgrounds and slides never fetch remote content, and the card never changes zone, media-player, announcement, volume, or audio settings.
+
+### Background choices
+
+For the normal setup, open the Solat.my device page and use **Warna Latar Mimbar**, **Paparan Latar Mimbar**, **Kejelasan Latar Mimbar** (0–100), **Imej Latar Mimbar**, and **Format Masa Mimbar**. The colour selector offers `forest`, `midnight`, `slate`, `burgundy`, and `indigo`; it never replaces the included Mimbar courtyard. **Paparan Latar Mimbar** turns that image layer on or off. A valid owner-provided `/local/...` value in **Imej Latar Mimbar** replaces the courtyard while it is on. **Format Masa Mimbar** offers `24h` and `12h`; an explicit `time_format: 24h` or `time_format: 12h` in the card YAML takes priority. These controls affect Mimbar cards mapped to that device and work without editing dashboard YAML.
+
+Home Assistant's view-level background and opacity controls affect wallpaper behind the dashboard view. They do not change this full-screen card's background.
+
+To make one screen differ from its Solat.my device, replace the card's `background:` lines (`source: integration`) with one of these:
+
+```yaml
+# Colour-only background
+background:
+  mode: color
+  color: midnight
+  opacity: 60
+
+# One or more owner images under /config/www
+background:
+  mode: image
+  images:
+    - /local/masjid-senja.jpg
+    - /local/masjid-pagi.jpg
+  position: center
+  rotation_seconds: 60
 ```

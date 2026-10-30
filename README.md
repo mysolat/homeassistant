@@ -8,7 +8,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 ## Features
 
-- **17 entities** created automatically per device — no helpers needed:
+- **23 entities** created automatically per device — no helpers needed:
   - **8 prayer time sensors** (Imsak, Subuh, Syuruk, Dhuha, Zohor, Asar, Maghrib, Isyak)
   - **Tarikh Hijri** — formatted Hijri date with month name in Malay
   - **Waktu Solat Seterusnya** — next upcoming prayer with countdown
@@ -18,10 +18,12 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
   - **Mod Pengumuman Azan** — announcement mode before azan (`tts` or `audio`)
   - **Kelantangan Azan** — volume slider (0.0–1.0)
   - **Fail Audio Azan / Subuh / Doa** — configurable audio filenames
+  - **Mimbar display controls** — background colour, image visibility, clarity, local image, and 12h/24h time for the full-screen Mimbar card
 - Supports **59 Malaysian zones** (all JAKIM zones + W.P.)
 - UI-based setup — just enter a name and pick a starting zone
 - Multiple devices supported (e.g., "Rumah" and "Pejabat")
 - Data sourced from `https://solat.my/api` → JAKIM e-Solat
+- **Paparan Mimbar Skrin Penuh** — an optional, Malay-only TV/dashboard card with a local `HH:MM:SS` next-adhan countdown, current-prayer highlight, optional Imsak/Dhuha/Ramadan rail, and native device controls for background, image visibility, and 12/24-hour display time
 
 ## Installation
 
@@ -42,7 +44,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 2. Search for **"Waktu Solat Malaysia"**
 3. Enter a **Device Name** (default: `Waktu Solat`) — this becomes the entity ID prefix
 4. Select the **starting zone** (e.g., `SGR01 — Selangor - Gombak, Petaling, ...`)
-5. Click Submit — all 16 entities appear immediately
+5. Click Submit — all 23 entities appear immediately
 
 > **To change zone later:** go to the device page and change the **Zon** select entity. All prayer time sensors update instantly without a restart.
 
@@ -77,11 +79,18 @@ The following entities are created under device **"Waktu Solat"** (default name)
 | `text.waktu_solat_fail_audio_azan` | Fail Audio Azan | Comma-separated azan filenames |
 | `text.waktu_solat_fail_audio_azan_subuh` | Fail Audio Azan Subuh | Comma-separated Subuh azan filenames |
 | `text.waktu_solat_fail_doa_selepas_azan` | Fail Doa Selepas Azan | Doa audio filename |
+| `select.waktu_solat_warna_latar_mimbar` | Warna Latar Mimbar | Mimbar background colour (`forest`, `midnight`, `slate`, `burgundy`, `indigo`) |
+| `select.waktu_solat_paparan_latar_mimbar` | Paparan Latar Mimbar | Show or hide the Mimbar background image (`on` / `off`) |
+| `number.waktu_solat_kejelasan_latar_mimbar` | Kejelasan Latar Mimbar | Mimbar background clarity (0–100 slider) |
+| `text.waktu_solat_imej_latar_mimbar` | Imej Latar Mimbar | Optional `/local/...` image that replaces the courtyard |
+| `select.waktu_solat_format_masa_mimbar` | Format Masa Mimbar | Mimbar time format (`24h` or `12h`) |
 
 ## Dashboard Cards
 
-See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts — a 3×2 grid for desktop and a vertical timeline for mobile, both with live current/next prayer indicators.
+See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts and the full-screen Mimbar card. The Mimbar card is served and loaded by this integration, so there is no dashboard resource to add; put it in a Panel view and map its timestamp, Hijri, and current-prayer entities explicitly. Configure its normal background on the matching Solat.my device through **Warna Latar Mimbar**, **Paparan Latar Mimbar**, **Kejelasan Latar Mimbar**, and **Imej Latar Mimbar**; use **Format Masa Mimbar** to choose 24-hour or 12-hour display time. The courtyard stays behind colour changes unless you turn the background off or provide a local replacement image. It calculates the next main prayer locally, including the after-Isyak Subuh rollover, and never controls azan audio.
 <img width="671" height="572" alt="Image" src="https://github.com/user-attachments/assets/13ac5b24-b76c-4253-8ec0-5007ec247d3d" />
+<img width="1816" height="1164" alt="mimbar_1" src="https://github.com/user-attachments/assets/f4b6f7fa-8b0e-427a-b810-22f142a6a657" />
+<img width="411" height="836" alt="mimbar_3" src="https://github.com/user-attachments/assets/f0554761-106f-4279-9608-cbffc0c80a7b" />
 
 ## Azan Automations
 
