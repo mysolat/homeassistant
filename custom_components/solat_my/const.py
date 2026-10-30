@@ -8,6 +8,7 @@ DOMAIN = "solat_my"
 
 API_BASE_URL = "https://solat.my/api"
 API_MONTHLY_ENDPOINT = "/monthly/{zone}/{month}?year={year}"
+API_YEARLY_ENDPOINT = "/yearly/{zone}/{year}"
 API_DETECT_ENDPOINT = "/detect"
 
 CONF_NAME = "name"

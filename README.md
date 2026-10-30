@@ -24,7 +24,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 - Supports **59 Malaysian zones** (all JAKIM zones + W.P.)
 - UI-based setup — just enter a name and pick a starting zone
 - Multiple devices supported (e.g., "Rumah" and "Pejabat")
-- Data sourced from `https://solat.my/api` → JAKIM e-Solat
+- Data sourced from `https://solat.my/api` → JAKIM e-Solat. The integration also saves the whole year's timetable on disk. If solat.my is unreachable, it reads prayer times from that copy.
 - **Skrin Solat** — an optional, Malay-only TV/dashboard card with a local `HH:MM:SS` next-adhan countdown, current-prayer highlight, optional Imsak/Dhuha/Ramadan rail, and native device controls for background, image visibility, and 12/24-hour display time
 
 ## Installation

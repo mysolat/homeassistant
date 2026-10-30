@@ -6,10 +6,11 @@ from datetime import timedelta
 from homeassistant.config_entries import ConfigEntryState
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
-from .conftest import MONTHLY_URL, load_fixture_json
+from .conftest import MONTHLY_URL, YEARLY_URL, load_fixture_json
 
 OCTOBER_URL = MONTHLY_URL.format(zone="SGR01", month=10, year=2026)
 NOVEMBER_URL = MONTHLY_URL.format(zone="SGR01", month=11, year=2026)
+YEAR_URL = YEARLY_URL.format(zone="SGR01", year=2026)
 
 
 async def _setup(hass, config_entry) -> None:
@@ -27,7 +28,8 @@ async def test_last_day_prefetches_next_month(
 
     await _setup(hass, config_entry)
 
-    assert mock_api.call_count == 2
+    monthly_calls = [call for call in mock_api.mock_calls if "/monthly/" in str(call[1])]
+    assert len(monthly_calls) == 2
 
 
 async def test_midnight_uses_prefetched_month_when_api_is_down(
@@ -40,6 +42,7 @@ async def test_midnight_uses_prefetched_month_when_api_is_down(
     coordinator = config_entry.runtime_data
 
     mock_api.clear_requests()
+    mock_api.get(YEAR_URL, status=404)
     mock_api.get(NOVEMBER_URL, status=500)
     freezer.move_to("2026-11-01T00:00:05+08:00")
     await coordinator.async_refresh()
@@ -73,11 +76,13 @@ async def test_error_retries_after_five_minutes(
     coordinator = config_entry.runtime_data
 
     mock_api.clear_requests()
+    mock_api.get(YEAR_URL, status=404)
     mock_api.get(OCTOBER_URL, status=500)
     await coordinator.async_set_zone("SGR01")
     assert coordinator.last_update_success is False
 
     mock_api.clear_requests()
+    mock_api.get(YEAR_URL, status=404)
     mock_api.get(OCTOBER_URL, json=load_fixture_json("monthly_SGR01_2026_10.json"))
     freezer.tick(timedelta(seconds=301))
     async_fire_time_changed(hass)

@@ -12,6 +12,7 @@ from custom_components.solat_my.const import DOMAIN
 
 FIXTURES = Path(__file__).parent / "fixtures"
 MONTHLY_URL = "https://solat.my/api/monthly/{zone}/{month}?year={year}"
+YEARLY_URL = "https://solat.my/api/yearly/{zone}/{year}"
 
 
 def load_fixture_json(name: str) -> dict:
@@ -36,12 +37,13 @@ def skip_skrin_solat_frontend():
 
 @pytest.fixture
 def mock_api(aioclient_mock):
-    """Serve saved October 2026 responses for SGR01 and SGR03."""
+    """Serve saved October 2026 responses for SGR01 and SGR03, and no saved year."""
     for zone in ("SGR01", "SGR03"):
         aioclient_mock.get(
             MONTHLY_URL.format(zone=zone, month=10, year=2026),
             json=load_fixture_json(f"monthly_{zone}_2026_10.json"),
         )
+        aioclient_mock.get(YEARLY_URL.format(zone=zone, year=2026), status=404)
     return aioclient_mock
 
 

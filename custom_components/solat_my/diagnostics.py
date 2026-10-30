@@ -43,6 +43,7 @@ async def async_get_config_entry_diagnostics(
             None if coordinator.last_exception is None else str(coordinator.last_exception)
         ),
         "update_interval_seconds": None if interval is None else interval.total_seconds(),
+        "source": data.get("source"),
     }
     report["today"] = {
         PRAYER_NAMES_MS[prayer].lower(): _iso(prayer_times.get(prayer))
@@ -55,4 +56,5 @@ async def async_get_config_entry_diagnostics(
     report["cached_months"] = [
         f"{zone}-{year}-{month:02d}" for zone, year, month in coordinator.cached_month_keys()
     ]
+    report["saved_years"] = sorted(f"{z}-{y}" for z, y in coordinator.saved_year_keys())
     return report

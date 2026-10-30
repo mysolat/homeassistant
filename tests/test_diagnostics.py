@@ -29,6 +29,8 @@ async def test_diagnostics_report_the_entry_and_today(
     assert result["coordinator"]["last_exception"] is None
     assert result["today"]["subuh"] == "2026-10-30T05:48:00+08:00"
     assert "SGR01-2026-10" in result["cached_months"]
+    assert result["coordinator"]["source"] == "api"
+    assert result["saved_years"] == []
     json.dumps(result)
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 import html
 import logging
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 import aiohttp
@@ -14,10 +14,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import API_BASE_URL, API_MONTHLY_ENDPOINT, DOMAIN, MALAYSIA_TZ
+from .const import (
+    API_BASE_URL,
+    API_MONTHLY_ENDPOINT,
+    API_YEARLY_ENDPOINT,
+    DOMAIN,
+    MALAYSIA_TZ,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +38,11 @@ FAILURES_BEFORE_REPAIR = 6
 
 # The calendar keeps this many extra months, beyond the ones the update loop keeps.
 CALENDAR_MONTHS_KEPT = 3
+
+STORAGE_VERSION = 1
+
+# The saved years on disk: this year and, from December, next year.
+SAVED_YEARS_KEPT = 2
 
 # JAKIM uses Malay month abbreviations (lang=ms_my) since 2026.
 # Map them to English so strptime %b can parse them.
@@ -81,6 +93,15 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Failed updates in a row. At FAILURES_BEFORE_REPAIR the Repairs notice appears.
         self._consecutive_failures = 0
         self._issue_id = f"api_unreachable_{self.config_entry.entry_id}"
+        # A whole year per (zone, year), saved on disk. Serves a month when the API is down.
+        self._store: Store[dict[str, Any]] = Store(
+            hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
+        )
+        self._years: dict[tuple[str, int], dict[str, Any]] = {}
+        # (zone, year, day) of each yearly fetch, so a failed one waits for the next day.
+        self._year_attempted: set[tuple[str, int, date]] = set()
+        # Months served from the saved year because the monthly fetch failed.
+        self._saved_month_keys: set[tuple[str, int, int]] = set()
         self.config_entry.async_on_unload(
             lambda: ir.async_delete_issue(hass, DOMAIN, self._issue_id)
         )
@@ -101,6 +122,9 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.zone = zone
         self._months.clear()
         self._calendar_months.clear()
+        self._years.clear()
+        self._year_attempted.clear()
+        self._saved_month_keys.clear()
         await self.async_refresh()
 
     def cached_month(self, year: int, month: int) -> dict[str, Any] | None:
@@ -112,13 +136,31 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the sorted (zone, year, month) keys of every cached month."""
         return sorted({*self._months, *self._calendar_months})
 
+    def saved_year_keys(self) -> list[tuple[str, int]]:
+        """Return the sorted (zone, year) keys of every saved year."""
+        return sorted(self._years)
+
+    async def async_load_saved_years(self) -> None:
+        """Read the saved years of the current zone from disk. Never raises."""
+        try:
+            stored = await self._store.async_load()
+        except Exception as err:  # noqa: BLE001 - a bad file must never block setup
+            _LOGGER.debug("Could not read saved prayer times: %s", err)
+            return
+        if not isinstance(stored, dict) or not isinstance(stored.get("years"), dict):
+            return
+        for name, data in stored["years"].items():
+            zone, _, year = str(name).rpartition("-")
+            if zone == self.zone and year.isdigit() and isinstance(data, dict):
+                self._years[(zone, int(year))] = data
+
     async def async_get_month(self, year: int, month: int) -> dict[str, Any] | None:
         """Return one month for the current zone, from cache or the API. None if unavailable."""
         if (cached := self.cached_month(year, month)) is not None:
             return cached
         key = (self.zone, year, month)
         try:
-            data = await self._async_fetch_month(*key)
+            data = await self._async_month(*key)
         except UpdateFailed as err:
             _LOGGER.debug("Could not fetch %s for the calendar: %s", key, err)
             return None
@@ -129,7 +171,18 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_fetch_month(self, zone: str, year: int, month: int) -> dict[str, Any]:
         """Fetch one month of prayer times for a zone from the solat.my API."""
-        url = API_BASE_URL + API_MONTHLY_ENDPOINT.format(zone=zone, month=month, year=year)
+        return await self._async_fetch_json(
+            API_BASE_URL + API_MONTHLY_ENDPOINT.format(zone=zone, month=month, year=year)
+        )
+
+    async def _async_fetch_year(self, zone: str, year: int) -> dict[str, Any]:
+        """Fetch one Gregorian year of prayer times for a zone from the solat.my API."""
+        return await self._async_fetch_json(
+            API_BASE_URL + API_YEARLY_ENDPOINT.format(zone=zone, year=year)
+        )
+
+    async def _async_fetch_json(self, url: str) -> dict[str, Any]:
+        """Fetch a prayer-time reply and check it has status OK and some rows."""
         session = async_get_clientsession(self.hass)
         try:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
@@ -161,6 +214,63 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         return data
 
+    def _month_from_saved_year(
+        self, zone: str, year: int, month: int
+    ) -> dict[str, Any] | None:
+        """Cut one month out of the saved year. None when no year is saved or no row matches."""
+        saved = self._years.get((zone, year))
+        if saved is None:
+            return None
+        rows = []
+        for row in saved.get("prayerTime", []):
+            if not isinstance(row, dict):
+                continue
+            row_date = _parse_date(row.get("date", ""))
+            if row_date is not None and (row_date.year, row_date.month) == (year, month):
+                rows.append(row)
+        if not rows:
+            return None
+        return {**saved, "prayerTime": rows, "periodType": "month"}
+
+    async def _async_month(self, zone: str, year: int, month: int) -> dict[str, Any]:
+        """Fetch one month, or take it from the saved year when the fetch fails."""
+        key = (zone, year, month)
+        try:
+            data = await self._async_fetch_month(*key)
+        except UpdateFailed as err:
+            saved = self._month_from_saved_year(*key)
+            if saved is None:
+                raise
+            _LOGGER.warning(
+                "solat.my unreachable, using saved prayer times for %s-%d-%02d: %s",
+                zone,
+                year,
+                month,
+                err,
+            )
+            self._saved_month_keys.add(key)
+            return saved
+        self._saved_month_keys.discard(key)
+        return data
+
+    async def _async_maybe_save_year(self, year: int, today: date) -> None:
+        """Fetch and save a whole year, at most once a day. Never raises."""
+        if (self.zone, year) in self._years or (self.zone, year, today) in self._year_attempted:
+            return
+        self._year_attempted.add((self.zone, year, today))
+        try:
+            data = await self._async_fetch_year(self.zone, year)
+        except UpdateFailed as err:
+            _LOGGER.debug("Could not fetch year %d for zone %s: %s", year, self.zone, err)
+            return
+        self._years[(self.zone, year)] = data
+        self._years = {k: v for k, v in self._years.items() if k[0] == self.zone}
+        while len(self._years) > SAVED_YEARS_KEPT:
+            del self._years[min(self._years)]
+        await self._store.async_save(
+            {"years": {f"{z}-{y}": d for (z, y), d in self._years.items()}}
+        )
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch today's data, and raise or clear the API repair issue."""
         try:
@@ -189,7 +299,7 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if key not in self._months:
             _LOGGER.debug("Fetching monthly prayer times for zone %s (%d-%02d)", *key)
-            self._months[key] = await self._async_fetch_month(*key)
+            self._months[key] = await self._async_month(*key)
         else:
             _LOGGER.debug("Using cached monthly prayer times for zone %s", self.zone)
         data = self._months[key]
@@ -212,10 +322,14 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         next_key = (self.zone, tomorrow.year, tomorrow.month)
         if next_key != key and next_key not in self._months:
             try:
-                self._months[next_key] = await self._async_fetch_month(*next_key)
+                self._months[next_key] = await self._async_month(*next_key)
             except UpdateFailed as err:
                 _LOGGER.debug("Could not prefetch %s: %s", next_key, err)
         self._months = {k: v for k, v in self._months.items() if k in (key, next_key)}
+
+        await self._async_maybe_save_year(today_date.year, today_date)
+        if today_date.month == 12:
+            await self._async_maybe_save_year(today_date.year + 1, today_date)
 
         date_str = today.get("date", "")
         parsed: dict[str, datetime | None] = {}
@@ -274,6 +388,7 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "locations": data.get("locations", []),
             "tomorrow_fajr": tomorrow_fajr,
             "tomorrow_raw": tomorrow_row or {},
+            "source": "saved" if key in self._saved_month_keys else "api",
         }
 
     def _zone_desc(self) -> str:
