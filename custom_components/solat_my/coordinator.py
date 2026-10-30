@@ -101,12 +101,17 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         retry_after=RETRY_AFTER_ERROR,
                     )
                 data = await response.json()
-        except (aiohttp.ClientError, TimeoutError) as err:
+        except (aiohttp.ClientError, TimeoutError, ValueError) as err:
             raise UpdateFailed(
                 f"Error communicating with solat.my API: {err}",
                 retry_after=RETRY_AFTER_ERROR,
             ) from err
 
+        if not isinstance(data, dict):
+            raise UpdateFailed(
+                f"Unexpected API response: {type(data).__name__}",
+                retry_after=RETRY_AFTER_ERROR,
+            )
         if data.get("status") != "OK!":
             raise UpdateFailed(
                 f"API returned error status: {data.get('status')}",
