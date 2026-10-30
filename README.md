@@ -44,6 +44,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 2. Search for **"Waktu Solat Malaysia"**
 3. Enter a **Device Name** (default: `Waktu Solat`) — this becomes the entity ID prefix
 4. Select the **starting zone** (e.g., `SGR01 — Selangor - Gombak, Petaling, ...`)
+   The zone is pre-selected from your Home Assistant home location. The integration sends that location, rounded to about 1 km, to solat.my once. You can choose a different zone.
 5. Click Submit — all 23 entities appear immediately
 
 > **To change zone later:** go to the device page and change the **Zon** select entity. All prayer time sensors update instantly without a restart.
