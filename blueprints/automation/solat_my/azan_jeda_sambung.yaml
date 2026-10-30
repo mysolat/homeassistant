@@ -1,0 +1,200 @@
+blueprint:
+  name: Azan Harian — Jeda & Sambung Semula (solat.my)
+  description: >
+    Capture every media player currently playing, pause them, play azan + doa,
+    then resume all paused devices using a snapshot scene.
+  domain: automation
+  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_jeda_sambung.yaml
+  input:
+    subuh_sensor:
+      name: Sensor Subuh
+      default: sensor.waktu_solat_subuh
+      selector:
+        entity:
+          domain: sensor
+    zohor_sensor:
+      name: Sensor Zohor
+      default: sensor.waktu_solat_zohor
+      selector:
+        entity:
+          domain: sensor
+    asar_sensor:
+      name: Sensor Asar
+      default: sensor.waktu_solat_asar
+      selector:
+        entity:
+          domain: sensor
+    maghrib_sensor:
+      name: Sensor Maghrib
+      default: sensor.waktu_solat_maghrib
+      selector:
+        entity:
+          domain: sensor
+    isyak_sensor:
+      name: Sensor Isyak
+      default: sensor.waktu_solat_isyak
+      selector:
+        entity:
+          domain: sensor
+    media_player_select:
+      name: Pemain Media Azan
+      default: select.waktu_solat_pemain_media_azan
+      selector:
+        entity:
+          domain: select
+    volume_number:
+      name: Kelantangan Azan
+      default: number.waktu_solat_kelantangan_azan
+      selector:
+        entity:
+          domain: number
+    azan_file_text:
+      name: Fail Audio Azan
+      default: text.waktu_solat_fail_audio_azan
+      selector:
+        entity:
+          domain: text
+    azan_subuh_file_text:
+      name: Fail Audio Azan Subuh
+      default: text.waktu_solat_fail_audio_azan_subuh
+      selector:
+        entity:
+          domain: text
+    doa_file_text:
+      name: Fail Doa Selepas Azan
+      default: text.waktu_solat_fail_doa_selepas_azan
+      selector:
+        entity:
+          domain: text
+    subuh_delay:
+      name: Tempoh Azan Subuh
+      default: "00:04:30"
+      selector:
+        duration:
+    azan_delay:
+      name: Tempoh Azan Lain
+      default: "00:02:47"
+      selector:
+        duration:
+
+mode: single
+
+triggers:
+  - trigger: time
+    at: !input subuh_sensor
+    id: subuh
+  - trigger: time
+    at: !input zohor_sensor
+    id: zohor
+  - trigger: time
+    at: !input asar_sensor
+    id: asar
+  - trigger: time
+    at: !input maghrib_sensor
+    id: maghrib
+  - trigger: time
+    at: !input isyak_sensor
+    id: isyak
+
+variables:
+  media_player_select: !input media_player_select
+  volume_number: !input volume_number
+  azan_file_text: !input azan_file_text
+  azan_subuh_file_text: !input azan_subuh_file_text
+  doa_file_text: !input doa_file_text
+
+actions:
+  - variables:
+      peranti_bermain: >
+        {{ states.media_player
+           | selectattr('state', 'eq', 'playing')
+           | map(attribute='entity_id')
+           | list }}
+
+  - if:
+      - condition: template
+        value_template: "{{ peranti_bermain | length > 0 }}"
+    then:
+      - action: scene.create
+        data:
+          scene_id: sebelum_azan
+          snapshot_entities: "{{ peranti_bermain }}"
+      - action: media_player.media_pause
+        continue_on_error: true
+        target:
+          entity_id: "{{ peranti_bermain }}"
+      - delay: "00:00:02"
+
+  - action: persistent_notification.create
+    data:
+      notification_id: solat_azan
+      title: >
+        🕋 Waktu Solat —
+        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ names[trigger.id] }}
+      message: >
+        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+        {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu {{ names[trigger.id] }}.
+
+  - if:
+      - condition: template
+        value_template: >
+          {{ state_attr(states(media_player_select), 'supported_features') | int(0) | bitwise_and(4) > 0 }}
+    then:
+      - action: media_player.volume_set
+        target:
+          entity_id: "{{ states(media_player_select) }}"
+        data:
+          volume_level: "{{ states(volume_number) | float }}"
+
+  - action: media_player.play_media
+    target:
+      entity_id: "{{ states(media_player_select) }}"
+    data:
+      media:
+        media_content_type: audio/mp3
+        media_content_id: >
+          {% if trigger.id == 'subuh' %}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(', ') | random | trim }}
+          {% else %}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+          {% endif %}
+        metadata: {}
+
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: subuh
+        sequence:
+          - delay: !input subuh_delay
+    default:
+      - delay: !input azan_delay
+
+  - action: media_player.play_media
+    alias: "Doa Selepas Azan"
+    target:
+      entity_id: "{{ states(media_player_select) }}"
+    data:
+      media:
+        media_content_id: >
+          media-source://media_source/local/azan/{{ states(doa_file_text) }}
+        media_content_type: audio/mpeg
+        metadata:
+          title: Doa Selepas Azan
+          media_class: music
+
+  - wait_for_trigger:
+      - trigger: state
+        entity_id: "{{ states(media_player_select) }}"
+        to: "idle"
+    timeout:
+      minutes: 2
+
+  - if:
+      - condition: template
+        value_template: "{{ peranti_bermain | length > 0 }}"
+    then:
+      - delay: "00:00:02"
+      - action: scene.turn_on
+        target:
+          entity_id: scene.sebelum_azan

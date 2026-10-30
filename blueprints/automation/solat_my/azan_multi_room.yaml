@@ -1,0 +1,111 @@
+blueprint:
+  name: Azan Serentak Multi-Room (solat.my)
+  description: Broadcast azan to multiple speakers simultaneously at prayer time.
+  domain: automation
+  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_multi_room.yaml
+  input:
+    subuh_sensor:
+      name: Sensor Subuh
+      default: sensor.waktu_solat_subuh
+      selector:
+        entity:
+          domain: sensor
+    zohor_sensor:
+      name: Sensor Zohor
+      default: sensor.waktu_solat_zohor
+      selector:
+        entity:
+          domain: sensor
+    asar_sensor:
+      name: Sensor Asar
+      default: sensor.waktu_solat_asar
+      selector:
+        entity:
+          domain: sensor
+    maghrib_sensor:
+      name: Sensor Maghrib
+      default: sensor.waktu_solat_maghrib
+      selector:
+        entity:
+          domain: sensor
+    isyak_sensor:
+      name: Sensor Isyak
+      default: sensor.waktu_solat_isyak
+      selector:
+        entity:
+          domain: sensor
+    speakers:
+      name: Pemain Media
+      description: All speakers that should play the azan
+      selector:
+        entity:
+          domain: media_player
+          multiple: true
+    volume_level:
+      name: Kelantangan
+      default: 0.65
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+          mode: slider
+    azan_file_text:
+      name: Fail Audio Azan
+      default: text.waktu_solat_fail_audio_azan
+      selector:
+        entity:
+          domain: text
+    azan_subuh_file_text:
+      name: Fail Audio Azan Subuh
+      default: text.waktu_solat_fail_audio_azan_subuh
+      selector:
+        entity:
+          domain: text
+
+mode: single
+
+triggers:
+  - trigger: time
+    at: !input subuh_sensor
+    id: subuh
+  - trigger: time
+    at: !input zohor_sensor
+    id: zohor
+  - trigger: time
+    at: !input asar_sensor
+    id: asar
+  - trigger: time
+    at: !input maghrib_sensor
+    id: maghrib
+  - trigger: time
+    at: !input isyak_sensor
+    id: isyak
+
+variables:
+  speakers: !input speakers
+  volume_level: !input volume_level
+  azan_file_text: !input azan_file_text
+  azan_subuh_file_text: !input azan_subuh_file_text
+
+actions:
+  - action: media_player.volume_set
+    continue_on_error: true
+    target:
+      entity_id: "{{ speakers }}"
+    data:
+      volume_level: "{{ volume_level }}"
+
+  - action: media_player.play_media
+    target:
+      entity_id: "{{ speakers }}"
+    data:
+      media:
+        media_content_type: audio/mp3
+        media_content_id: >
+          {% if trigger.id == 'subuh' %}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(', ') | random | trim }}
+          {% else %}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+          {% endif %}
+        metadata: {}

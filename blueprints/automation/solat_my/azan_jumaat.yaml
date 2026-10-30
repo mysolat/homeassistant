@@ -1,0 +1,86 @@
+blueprint:
+  name: Azan Zohor / Jumaat (solat.my)
+  description: >
+    Override Zohor azan on Friday with a Jumaat azan file. Falls back to a
+    random azan filename on other weekdays.
+  domain: automation
+  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_jumaat.yaml
+  input:
+    zohor_sensor:
+      name: Sensor Zohor
+      default: sensor.waktu_solat_zohor
+      selector:
+        entity:
+          domain: sensor
+    media_player_select:
+      name: Pemain Media Azan
+      default: select.waktu_solat_pemain_media_azan
+      selector:
+        entity:
+          domain: select
+    volume_number:
+      name: Kelantangan Azan
+      default: number.waktu_solat_kelantangan_azan
+      selector:
+        entity:
+          domain: number
+    azan_file_text:
+      name: Fail Audio Azan
+      default: text.waktu_solat_fail_audio_azan
+      selector:
+        entity:
+          domain: text
+    azan_jumaat_filename:
+      name: Fail Audio Azan Jumaat
+      description: Filename in /media/azan/ for the Friday azan
+      default: azan_jumaat.mp3
+      selector:
+        text:
+
+mode: single
+
+triggers:
+  - trigger: time
+    at: !input zohor_sensor
+
+variables:
+  media_player_select: !input media_player_select
+  volume_number: !input volume_number
+  azan_file_text: !input azan_file_text
+  azan_jumaat_filename: !input azan_jumaat_filename
+
+actions:
+  - action: persistent_notification.create
+    data:
+      notification_id: solat_azan
+      title: >
+        🕋 Waktu Solat —
+        {% if now().weekday() == 4 %}Jumaat{% else %}Zohor{% endif %}
+      message: >
+        {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu
+        {% if now().weekday() == 4 %}Jumaat{% else %}Zohor{% endif %}.
+
+  - if:
+      - condition: template
+        value_template: >
+          {{ state_attr(states(media_player_select), 'supported_features') | int(0) | bitwise_and(4) > 0 }}
+    then:
+      - action: media_player.volume_set
+        target:
+          entity_id: "{{ states(media_player_select) }}"
+        data:
+          volume_level: "{{ states(volume_number) | float }}"
+
+  - action: media_player.play_media
+    target:
+      entity_id: "{{ states(media_player_select) }}"
+    data:
+      media:
+        media_content_type: audio/mp3
+        media_content_id: >
+          {% if now().weekday() == 4 %}
+            media-source://media_source/local/azan/{{ azan_jumaat_filename }}
+          {% else %}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+          {% endif %}
+        metadata: {}
