@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.7] - 2026-10-30
 
 ### Fixed
 - An API reply that is not valid JSON now retries in 5 minutes like any other API error. Before, it waited 12 hours, and on the last day of the month it could fail the whole update.
