@@ -200,6 +200,33 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 parsed[prayer] = None
 
+        # Tomorrow's row comes from the cache only. The prefetch above already
+        # ran, so a missing month or row leaves these two keys empty.
+        tomorrow_row = next(
+            (
+                pt
+                for pt in self._months.get(next_key, {}).get("prayerTime", [])
+                if _parse_date(pt.get("date", "")) == tomorrow
+            ),
+            None,
+        )
+        tomorrow_fajr: datetime | None = None
+        if tomorrow_row is not None:
+            tomorrow_date_str = tomorrow_row.get("date", "")
+            tomorrow_fajr_str = tomorrow_row.get("fajr", "")
+            if tomorrow_fajr_str and tomorrow_date_str:
+                try:
+                    tomorrow_fajr = datetime.strptime(
+                        _normalise_ms_date(f"{tomorrow_date_str} {tomorrow_fajr_str}"),
+                        "%d-%b-%Y %H:%M:%S",
+                    ).replace(tzinfo=MALAYSIA_TZ)
+                except ValueError:
+                    _LOGGER.warning(
+                        "Could not parse fajr time: %s %s",
+                        tomorrow_date_str,
+                        tomorrow_fajr_str,
+                    )
+
         return {
             "zone": data.get("zone", self.zone),
             "zone_desc": self._zone_desc(),
@@ -210,6 +237,8 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "raw": today,
             "prayer_times": parsed,
             "locations": data.get("locations", []),
+            "tomorrow_fajr": tomorrow_fajr,
+            "tomorrow_raw": tomorrow_row or {},
         }
 
     def _zone_desc(self) -> str:

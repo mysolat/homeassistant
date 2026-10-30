@@ -184,9 +184,10 @@ class NextPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
             self._cancel_interval = None
         await super().async_will_remove_from_hass()
 
-    def _get_next_prayer(self) -> tuple[str | None, datetime | None]:
+    def _get_next_prayer(self) -> tuple[str | None, datetime | None, bool]:
+        """Return (prayer, time, is_tomorrow). After Isyak this is tomorrow's Subuh."""
         if self.coordinator.data is None:
-            return None, None
+            return None, None, False
         now = dt_util.now()
         for prayer in [PRAYER_FAJR, PRAYER_SYURUK, PRAYER_DHUHA, PRAYER_DHUHR,
                        PRAYER_ASR, PRAYER_MAGHRIB, PRAYER_ISHA]:
@@ -194,31 +195,42 @@ class NextPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
             if prayer_at is None:
                 continue
             if prayer_at > now:
-                return prayer, prayer_at
-        return None, None
+                return prayer, prayer_at, False
+        return PRAYER_FAJR, self.coordinator.data.get("tomorrow_fajr"), True
 
     @property
     def native_value(self) -> str | None:
-        prayer, _ = self._get_next_prayer()
-        return PRAYER_NAMES_MS.get(prayer, prayer.capitalize()) if prayer else "Selesai"
+        prayer, _, _ = self._get_next_prayer()
+        return PRAYER_NAMES_MS[prayer] if prayer else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        prayer, dt_aware = self._get_next_prayer()
-        if prayer is None or dt_aware is None:
-            return {"prayer": None, "time_24h": None, "countdown": None}
-        delta = dt_aware - dt_util.now()
-        total_seconds = max(0, int(delta.total_seconds()))
-        hours, rem = divmod(total_seconds, 3600)
-        raw = self.coordinator.data.get("raw", {}) if self.coordinator.data else {}
+        prayer, dt_aware, tomorrow = self._get_next_prayer()
+        if prayer is None:
+            return {
+                "prayer": None,
+                "time_24h": None,
+                "countdown": None,
+                "tomorrow": False,
+            }
+        data = self.coordinator.data or {}
+        raw = data.get("tomorrow_raw", {}) if tomorrow else data.get("raw", {})
         time_str = raw.get(prayer, "")
-        return {
+        attributes: dict[str, Any] = {
             "prayer": prayer,
             "prayer_ms": PRAYER_NAMES_MS.get(prayer, prayer),
             "time_24h": time_str[:5] if time_str else None,
-            "countdown": f"{hours:02d}:{rem // 60:02d}",
-            "countdown_seconds": total_seconds,
+            "tomorrow": tomorrow,
         }
+        if dt_aware is None:
+            attributes["countdown"] = None
+            attributes["countdown_seconds"] = None
+            return attributes
+        total_seconds = max(0, int((dt_aware - dt_util.now()).total_seconds()))
+        hours, rem = divmod(total_seconds, 3600)
+        attributes["countdown"] = f"{hours:02d}:{rem // 60:02d}"
+        attributes["countdown_seconds"] = total_seconds
+        return attributes
 
 
 class CurrentPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
