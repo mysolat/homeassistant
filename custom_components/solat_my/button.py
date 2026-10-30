@@ -59,7 +59,7 @@ class TestAzanButton(ButtonEntity):
     """Play the first azan file now, with the configured player and volume."""
 
     _attr_has_entity_name = True
-    _attr_name = "Uji Azan"
+    _attr_name = "Uji Main Azan"
     _attr_icon = "mdi:play-circle-outline"
 
     def __init__(self, entry: ConfigEntry) -> None:
@@ -120,7 +120,7 @@ class StopAzanButton(ButtonEntity):
     """Stop the azan media player."""
 
     _attr_has_entity_name = True
-    _attr_name = "Henti Azan"
+    _attr_name = "Uji Henti Azan"
     _attr_icon = "mdi:stop-circle-outline"
 
     def __init__(self, entry: ConfigEntry) -> None:

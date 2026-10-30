@@ -18,7 +18,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
   - **Mod Pengumuman Azan** — announcement mode before azan (`tts` or `audio`)
   - **Kelantangan Azan** — volume slider (0.0–1.0)
   - **Fail Audio Azan / Subuh / Doa** — configurable audio filenames
-  - **Uji Azan / Henti Azan** — buttons that play the azan now, or stop it
+  - **Uji Main Azan / Uji Henti Azan** — buttons that play the azan now, or stop it
   - **Kalendar Solat** — calendar with the five prayer times as events, for calendar triggers in automations and the Calendar panel
   - **Skrin Solat display controls** — background colour, image visibility, clarity, local image, and 12h/24h time for the full-screen Skrin Solat card
 - Supports **59 Malaysian zones** (all JAKIM zones + W.P.)
@@ -86,18 +86,18 @@ The following entities are created under device **"Waktu Solat"** (default name)
 | `text.waktu_solat_fail_audio_azan` | Fail Audio Azan | Comma-separated azan filenames |
 | `text.waktu_solat_fail_audio_azan_subuh` | Fail Audio Azan Subuh | Comma-separated Subuh azan filenames |
 | `text.waktu_solat_fail_doa_selepas_azan` | Fail Doa Selepas Azan | Doa audio filename |
-| `select.waktu_solat_warna_latar_skrin_solat` | Warna Latar Skrin Solat | Skrin Solat background colour (`forest`, `midnight`, `slate`, `burgundy`, `indigo`) |
-| `select.waktu_solat_paparan_latar_skrin_solat` | Paparan Latar Skrin Solat | Show or hide the Skrin Solat background image (`on` / `off`) |
-| `number.waktu_solat_kejelasan_latar_skrin_solat` | Kejelasan Latar Skrin Solat | Skrin Solat background clarity (0–100 slider) |
-| `text.waktu_solat_imej_latar_skrin_solat` | Imej Latar Skrin Solat | Optional `/local/...` image that replaces the courtyard |
-| `select.waktu_solat_format_masa_skrin_solat` | Format Masa Skrin Solat | Skrin Solat time format (`24h` or `12h`) |
+| `select.waktu_solat_skrin_warna_latar` | Skrin Warna Latar | Skrin Solat background colour (`forest`, `midnight`, `slate`, `burgundy`, `indigo`) |
+| `select.waktu_solat_skrin_paparan_latar` | Skrin Paparan Latar | Show or hide the Skrin Solat background image (`on` / `off`) |
+| `number.waktu_solat_skrin_kejelasan_latar` | Skrin Kejelasan Latar | Skrin Solat background clarity (0–100 slider) |
+| `text.waktu_solat_skrin_imej_latar` | Skrin Imej Latar | Optional `/local/...` image that replaces the courtyard |
+| `select.waktu_solat_skrin_format_masa` | Skrin Format Masa | Skrin Solat time format (`24h` or `12h`) |
 
 ### Buttons
 
 | Entity ID | Name | Description |
 |-----------|------|-------------|
-| `button.waktu_solat_uji_azan` | Uji Azan | Plays the first file of **Fail Audio Azan** now, on **Pemain Media Azan** at **Kelantangan Azan** volume. Use it to check your setup without waiting for a prayer |
-| `button.waktu_solat_henti_azan` | Henti Azan | Stops **Pemain Media Azan** |
+| `button.waktu_solat_uji_main_azan` | Uji Main Azan | Plays the first file of **Fail Audio Azan** now, on **Pemain Media Azan** at **Kelantangan Azan** volume. Use it to check your setup without waiting for a prayer |
+| `button.waktu_solat_uji_henti_azan` | Uji Henti Azan | Stops **Pemain Media Azan** |
 
 ### Calendar
 
@@ -107,7 +107,7 @@ The following entities are created under device **"Waktu Solat"** (default name)
 
 ## Dashboard Cards
 
-See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts and the full-screen Skrin Solat card. The Skrin Solat card is served and loaded by this integration, so there is no dashboard resource to add; put it in a Panel view and map its timestamp, Hijri, and current-prayer entities explicitly. Configure its normal background on the matching Solat.my device through **Warna Latar Skrin Solat**, **Paparan Latar Skrin Solat**, **Kejelasan Latar Skrin Solat**, and **Imej Latar Skrin Solat**; use **Format Masa Skrin Solat** to choose 24-hour or 12-hour display time. The courtyard stays behind colour changes unless you turn the background off or provide a local replacement image. It calculates the next main prayer locally, including the after-Isyak Subuh rollover, and never controls azan audio.
+See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts and the full-screen Skrin Solat card. The Skrin Solat card is served and loaded by this integration, so there is no dashboard resource to add; put it in a Panel view and map its timestamp, Hijri, and current-prayer entities explicitly. Configure its normal background on the matching Solat.my device through **Skrin Warna Latar**, **Skrin Paparan Latar**, **Skrin Kejelasan Latar**, and **Skrin Imej Latar**; use **Skrin Format Masa** to choose 24-hour or 12-hour display time. The courtyard stays behind colour changes unless you turn the background off or provide a local replacement image. It calculates the next main prayer locally, including the after-Isyak Subuh rollover, and never controls azan audio.
 <img width="671" height="572" alt="Image" src="https://github.com/user-attachments/assets/13ac5b24-b76c-4253-8ec0-5007ec247d3d" />
 <img width="1816" height="1164" alt="skrin_solat_1" src="https://github.com/user-attachments/assets/f4b6f7fa-8b0e-427a-b810-22f142a6a657" />
 <img width="411" height="836" alt="skrin_solat_3" src="https://github.com/user-attachments/assets/f0554761-106f-4279-9608-cbffc0c80a7b" />

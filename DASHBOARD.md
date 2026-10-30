@@ -287,7 +287,7 @@ views:
         title: Masjid Al-Hidayah
         location: Putrajaya
         message: Sila rapatkan saf dan matikan nada telefon.
-        # time_format: 12h  # optional; overrides the device's Format Masa Skrin Solat
+        # time_format: 12h  # optional; overrides the device's Skrin Format Masa
         fasting_context: auto
         background:
           source: integration
@@ -314,7 +314,7 @@ views:
 
 ### Background choices
 
-For the normal setup, open the Solat.my device page and use **Warna Latar Skrin Solat**, **Paparan Latar Skrin Solat**, **Kejelasan Latar Skrin Solat** (0–100), **Imej Latar Skrin Solat**, and **Format Masa Skrin Solat**. The colour selector offers `forest`, `midnight`, `slate`, `burgundy`, and `indigo`; it never replaces the included courtyard. **Paparan Latar Skrin Solat** turns that image layer on or off. A valid owner-provided `/local/...` value in **Imej Latar Skrin Solat** replaces the courtyard while it is on. **Format Masa Skrin Solat** offers `24h` and `12h`; an explicit `time_format: 24h` or `time_format: 12h` in the card YAML takes priority. These controls affect Skrin Solat cards mapped to that device and work without editing dashboard YAML.
+For the normal setup, open the Solat.my device page and use **Skrin Warna Latar**, **Skrin Paparan Latar**, **Skrin Kejelasan Latar** (0–100), **Skrin Imej Latar**, and **Skrin Format Masa**. The colour selector offers `forest`, `midnight`, `slate`, `burgundy`, and `indigo`; it never replaces the included courtyard. **Skrin Paparan Latar** turns that image layer on or off. A valid owner-provided `/local/...` value in **Skrin Imej Latar** replaces the courtyard while it is on. **Skrin Format Masa** offers `24h` and `12h`; an explicit `time_format: 24h` or `time_format: 12h` in the card YAML takes priority. These controls affect Skrin Solat cards mapped to that device and work without editing dashboard YAML.
 
 Home Assistant's view-level background and opacity controls affect wallpaper behind the dashboard view. They do not change this full-screen card's background.
 

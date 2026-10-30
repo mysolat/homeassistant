@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Display settings are named with a **Skrin** prefix (Skrin Warna Latar, Skrin Paparan Latar, Skrin Kejelasan Latar, Skrin Imej Latar, Skrin Format Masa), and the buttons are **Uji Main Azan** and **Uji Henti Azan**, so each group sorts together on the device page. New installs get matching entity IDs; existing entity IDs do not change.
 - Removed the display's old name from the code, file names and URLs, and dropped the legacy card type alias. Use `custom:solat-my-skrin-solat-card`; the card now loads from `/api/solat_my/skrin-solat/`. Settings entities are migrated to new unique IDs automatically, and their entity IDs do not change.
 
 ## [1.0.10] - 2026-10-30

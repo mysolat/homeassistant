@@ -221,7 +221,7 @@ class SkrinSolatBackgroundSelect(RestoreEntity, SelectEntity):
     """Select the shared Skrin Solat display colour for this device."""
 
     _attr_has_entity_name = True
-    _attr_name = "Warna Latar Skrin Solat"
+    _attr_name = "Skrin Warna Latar"
     _attr_icon = "mdi:palette"
     _attr_options = SKRIN_SOLAT_BACKGROUND_OPTIONS
 
@@ -249,7 +249,7 @@ class SkrinSolatBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
     """Toggle the shared Skrin Solat image background for this device."""
 
     _attr_has_entity_name = True
-    _attr_name = "Paparan Latar Skrin Solat"
+    _attr_name = "Skrin Paparan Latar"
     _attr_icon = "mdi:image-outline"
     _attr_options = SKRIN_SOLAT_BACKGROUND_VISIBILITY_OPTIONS
 
@@ -277,7 +277,7 @@ class SkrinSolatTimeFormatSelect(RestoreEntity, SelectEntity):
     """Select the shared Skrin Solat clock format for this device."""
 
     _attr_has_entity_name = True
-    _attr_name = "Format Masa Skrin Solat"
+    _attr_name = "Skrin Format Masa"
     _attr_icon = "mdi:clock-outline"
     _attr_options = SKRIN_SOLAT_TIME_FORMAT_OPTIONS
 

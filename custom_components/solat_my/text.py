@@ -77,7 +77,7 @@ class SkrinSolatBackgroundImageText(RestoreEntity, TextEntity):
     """Configure the local image used by the Skrin Solat image background."""
 
     _attr_has_entity_name = True
-    _attr_name = "Imej Latar Skrin Solat"
+    _attr_name = "Skrin Imej Latar"
     _attr_icon = "mdi:image"
     _attr_mode = TextMode.TEXT
     _attr_native_min = 0
@@ -102,6 +102,6 @@ class SkrinSolatBackgroundImageText(RestoreEntity, TextEntity):
         """Set an optional local image path without permitting remote content."""
         path = value.strip()
         if path and not path.startswith("/local/"):
-            raise ValueError("Imej Latar Skrin Solat mesti menggunakan laluan /local/")
+            raise ValueError("Skrin Imej Latar mesti menggunakan laluan /local/")
         self._attr_native_value = path
         self.async_write_ha_state()

@@ -56,7 +56,7 @@ class SkrinSolatBackgroundOpacityNumber(RestoreEntity, NumberEntity):
     """Control the visible strength of a Skrin Solat card background."""
 
     _attr_has_entity_name = True
-    _attr_name = "Kejelasan Latar Skrin Solat"
+    _attr_name = "Skrin Kejelasan Latar"
     _attr_icon = "mdi:image-outline"
     _attr_native_min_value = 0
     _attr_native_max_value = 100

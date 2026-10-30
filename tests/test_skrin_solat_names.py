@@ -6,11 +6,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 NAMES = (
-    ("select", "skrin_solat_background", "Warna Latar Skrin Solat", "warna_latar"),
-    ("select", "skrin_solat_background_visibility", "Paparan Latar Skrin Solat", "paparan_latar"),
-    ("select", "skrin_solat_time_format", "Format Masa Skrin Solat", "format_masa"),
-    ("number", "skrin_solat_background_opacity", "Kejelasan Latar Skrin Solat", "kejelasan_latar"),
-    ("text", "skrin_solat_background_image", "Imej Latar Skrin Solat", "imej_latar"),
+    ("select", "skrin_solat_background", "Skrin Warna Latar", "warna_latar"),
+    ("select", "skrin_solat_background_visibility", "Skrin Paparan Latar", "paparan_latar"),
+    ("select", "skrin_solat_time_format", "Skrin Format Masa", "format_masa"),
+    ("number", "skrin_solat_background_opacity", "Skrin Kejelasan Latar", "kejelasan_latar"),
+    ("text", "skrin_solat_background_image", "Skrin Imej Latar", "imej_latar"),
 )
 
 
@@ -32,7 +32,7 @@ async def test_entity_has_skrin_solat_name_and_unique_id(
         domain, "solat_my", f"{config_entry.entry_id}_{suffix}"
     )
 
-    assert entity_id == f"{domain}.waktu_solat_{id_stem}_skrin_solat"
+    assert entity_id == f"{domain}.waktu_solat_skrin_{id_stem}"
     state = hass.states.get(entity_id)
     assert state.attributes["friendly_name"] == f"Waktu Solat {name}"
 
@@ -47,7 +47,7 @@ async def test_image_error_names_skrin_solat(
         "text", "solat_my", f"{config_entry.entry_id}_skrin_solat_background_image"
     )
 
-    with pytest.raises((ValueError, HomeAssistantError), match="Skrin Solat"):
+    with pytest.raises((ValueError, HomeAssistantError), match="Skrin Imej Latar"):
         await hass.services.async_call(
             "text",
             "set_value",

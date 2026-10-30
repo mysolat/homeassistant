@@ -137,11 +137,14 @@ async def test_buttons_have_stable_unique_ids(
     await _setup(hass, config_entry, freezer)
     registry = er.async_get(hass)
 
-    for suffix, name in (("uji_azan", "Uji Azan"), ("henti_azan", "Henti Azan")):
+    for suffix, name, object_id in (
+        ("uji_azan", "Uji Main Azan", "uji_main_azan"),
+        ("henti_azan", "Uji Henti Azan", "uji_henti_azan"),
+    ):
         entity_id = registry.async_get_entity_id(
             "button", "solat_my", f"{config_entry.entry_id}_{suffix}"
         )
-        assert entity_id == f"button.waktu_solat_{suffix}"
+        assert entity_id == f"button.waktu_solat_{object_id}"
         assert hass.states.get(entity_id).attributes["friendly_name"] == (
             f"Waktu Solat {name}"
         )
