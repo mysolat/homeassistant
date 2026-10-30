@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - The zone chosen with `select.waktu_solat_zon` now survives a restart. Before, the sensors went back to the setup zone's times until the next month.
 - Prayer times are always Malaysian time (`Asia/Kuala_Lumpur`), whatever time zone Home Assistant uses.
 - The `bearing` attribute shows `291° 7′ 23″` instead of HTML entities.
+- On the last day of each month the integration downloads next month's prayer times, so the change of month needs no network.
+- After an API error the integration retries in 5 minutes instead of 12 hours.
+- If the API reply lacks today's date, the sensors go unavailable and the log names the date. Before, they silently showed another day's times.
 
 ## [1.0.5] - 2026-09-19
 
