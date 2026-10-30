@@ -8,8 +8,9 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -37,14 +38,14 @@ async def _validate_zone(hass: HomeAssistant, zone: str) -> dict[str, str] | Non
     """Validate zone by calling the API. Returns None on success, error dict on failure."""
     url = f"{API_BASE_URL}/daily/{zone}"
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as response:
-                if response.status != 200:
-                    return {"base": "cannot_connect"}
-                data = await response.json()
-                if data.get("status") != "OK!":
-                    return {"base": "invalid_zone"}
-    except aiohttp.ClientError:
+        session = async_get_clientsession(hass)
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as response:
+            if response.status != 200:
+                return {"base": "cannot_connect"}
+            data = await response.json()
+            if data.get("status") != "OK!":
+                return {"base": "invalid_zone"}
+    except (aiohttp.ClientError, TimeoutError):
         return {"base": "cannot_connect"}
     except Exception:  # pylint: disable=broad-except
         return {"base": "unknown"}
@@ -105,35 +106,4 @@ class SolatMyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=schema,
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> SolatMyOptionsFlow:
-        """Get the options flow."""
-        return SolatMyOptionsFlow(config_entry)
-
-
-class SolatMyOptionsFlow(config_entries.OptionsFlow):
-    """Handle options — zone is changed live via the Zon select entity."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Show a note directing users to the Zon entity."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({}),
-            description_placeholders={
-                "note": "Tukar zon waktu solat menggunakan entiti 'Zon' pada halaman peranti."
-            },
         )
