@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import * as model from "../../custom_components/solat_my/frontend/mimbar-model.mjs";
+import * as model from "../../custom_components/solat_my/frontend/skrin-solat-model.mjs";
 
 const entities = {
   subuh: "sensor.s", syuruk: "sensor.sy", zohor: "sensor.z", asar: "sensor.a",
@@ -50,9 +50,9 @@ test("splitDayPeriod splits clock and period", () => {
   assert.deepEqual(model.splitDayPeriod("01:00 PM"), { clock: "01:00", period: "PM" });
 });
 
-test("assertMimbarConfig throws when entities.subuh is missing", () => {
+test("assertSkrinSolatConfig throws when entities.subuh is missing", () => {
   assert.throws(
-    () => model.assertMimbarConfig({ entities: {} }),
+    () => model.assertSkrinSolatConfig({ entities: {} }),
     new Error("entities.subuh is required"),
   );
 });

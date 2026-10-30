@@ -19,7 +19,7 @@ export const SCHEDULE_PRAYER_ICONS = {
   maghrib: "mdi:weather-sunset-down",
   isyak: "mdi:weather-night",
 };
-export const MIMBAR_COURTYARD_BACKGROUND_URL = "/api/solat_my/mimbar/assets/mimbar-courtyard.png";
+export const SKRIN_SOLAT_COURTYARD_BACKGROUND_URL = "/api/solat_my/skrin-solat/assets/skrin-solat-courtyard.png";
 export const BACKGROUND_COLOR_PRESETS = {
   forest: "Hutan",
   midnight: "Tengah malam",
@@ -27,7 +27,7 @@ export const BACKGROUND_COLOR_PRESETS = {
   burgundy: "Delima",
   indigo: "Nila",
 };
-export const MIMBAR_THEME_TOKENS = {
+export const SKRIN_SOLAT_THEME_TOKENS = {
   forest: {
     accent: "oklch(0.88 0.08 151)",
     accentStrong: "oklch(0.96 0.035 151)",
@@ -162,7 +162,7 @@ const PRAYER_LABELS = {
   isyak: "Isyak",
 };
 
-export function assertMimbarConfig(config) {
+export function assertSkrinSolatConfig(config) {
   for (const key of REQUIRED_ENTITY_KEYS) {
     if (typeof config?.entities?.[key] !== "string" || !config.entities[key].trim()) {
       throw new Error(`entities.${key} is required`);
@@ -202,7 +202,7 @@ export function formatCountdown(seconds) {
     .join(":");
 }
 
-export function resolveMimbarBackground(background = {}, integrationSettings = {}) {
+export function resolveSkrinSolatBackground(background = {}, integrationSettings = {}) {
   const source = background?.source ?? "card";
   const selectedTheme = source === "integration"
     ? integrationSettings?.theme in BACKGROUND_COLOR_PRESETS ? integrationSettings.theme : "midnight"
@@ -227,15 +227,15 @@ export function resolveMimbarBackground(background = {}, integrationSettings = {
   return { mode: "color", color, opacity };
 }
 
-export function resolveMimbarTimeFormat(cardTimeFormat, integrationTimeFormat) {
+export function resolveSkrinSolatTimeFormat(cardTimeFormat, integrationTimeFormat) {
   if (["12h", "24h"].includes(cardTimeFormat)) {
     return cardTimeFormat;
   }
   return ["12h", "24h"].includes(integrationTimeFormat) ? integrationTimeFormat : "24h";
 }
 
-export function resolveMimbarTheme(color) {
-  return MIMBAR_THEME_TOKENS[color] ?? MIMBAR_THEME_TOKENS.midnight;
+export function resolveSkrinSolatTheme(color) {
+  return SKRIN_SOLAT_THEME_TOKENS[color] ?? SKRIN_SOLAT_THEME_TOKENS.midnight;
 }
 
 export function resolveIntegrationBackgroundImages(integrationSettings = {}) {
@@ -245,7 +245,7 @@ export function resolveIntegrationBackgroundImages(integrationSettings = {}) {
 
   return isLocalAsset(integrationSettings?.image)
     ? [integrationSettings.image]
-    : [MIMBAR_COURTYARD_BACKGROUND_URL];
+    : [SKRIN_SOLAT_COURTYARD_BACKGROUND_URL];
 }
 
 export function backgroundVeilOpacity(clarity) {
@@ -267,7 +267,7 @@ export function mergeBasicEditorConfig(config, values) {
 }
 
 export function buildPrayerView({ config, states, now, timeZone = "Asia/Kuala_Lumpur" }) {
-  assertMimbarConfig(config);
+  assertSkrinSolatConfig(config);
 
   const displayMetadata = {
     localClock: formatLocalClock(now, timeZone, config.time_format),

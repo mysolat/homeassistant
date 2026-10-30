@@ -13,12 +13,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_ZONE,
-    DEFAULT_MIMBAR_BACKGROUND,
-    DEFAULT_MIMBAR_BACKGROUND_VISIBILITY,
-    DEFAULT_MIMBAR_TIME_FORMAT,
-    MIMBAR_BACKGROUND_OPTIONS,
-    MIMBAR_BACKGROUND_VISIBILITY_OPTIONS,
-    MIMBAR_TIME_FORMAT_OPTIONS,
+    DEFAULT_SKRIN_SOLAT_BACKGROUND,
+    DEFAULT_SKRIN_SOLAT_BACKGROUND_VISIBILITY,
+    DEFAULT_SKRIN_SOLAT_TIME_FORMAT,
+    SKRIN_SOLAT_BACKGROUND_OPTIONS,
+    SKRIN_SOLAT_BACKGROUND_VISIBILITY_OPTIONS,
+    SKRIN_SOLAT_TIME_FORMAT_OPTIONS,
     ZONES,
 )
 from .coordinator import SolatMyCoordinator
@@ -37,9 +37,9 @@ async def async_setup_entry(
             ZoneSelect(coordinator, entry),
             MediaPlayerSelect(hass, entry),
             AnnouncementModeSelect(entry),
-            MimbarBackgroundSelect(entry),
-            MimbarBackgroundVisibilitySelect(entry),
-            MimbarTimeFormatSelect(entry),
+            SkrinSolatBackgroundSelect(entry),
+            SkrinSolatBackgroundVisibilitySelect(entry),
+            SkrinSolatTimeFormatSelect(entry),
         ]
     )
 
@@ -217,19 +217,19 @@ class AnnouncementModeSelect(RestoreEntity, SelectEntity):
         self.async_write_ha_state()
 
 
-class MimbarBackgroundSelect(RestoreEntity, SelectEntity):
+class SkrinSolatBackgroundSelect(RestoreEntity, SelectEntity):
     """Select the shared Skrin Solat display colour for this device."""
 
     _attr_has_entity_name = True
     _attr_name = "Warna Latar Skrin Solat"
     _attr_icon = "mdi:palette"
-    _attr_options = MIMBAR_BACKGROUND_OPTIONS
+    _attr_options = SKRIN_SOLAT_BACKGROUND_OPTIONS
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the Skrin Solat background colour selector."""
-        self._attr_unique_id = f"{entry.entry_id}_mimbar_background"
+        self._attr_unique_id = f"{entry.entry_id}_skrin_solat_background"
         self._attr_device_info = _make_device_info(entry)
-        self._attr_current_option = DEFAULT_MIMBAR_BACKGROUND
+        self._attr_current_option = DEFAULT_SKRIN_SOLAT_BACKGROUND
 
     async def async_added_to_hass(self) -> None:
         """Restore the last selected background colour."""
@@ -245,19 +245,19 @@ class MimbarBackgroundSelect(RestoreEntity, SelectEntity):
         self.async_write_ha_state()
 
 
-class MimbarBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
+class SkrinSolatBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
     """Toggle the shared Skrin Solat image background for this device."""
 
     _attr_has_entity_name = True
     _attr_name = "Paparan Latar Skrin Solat"
     _attr_icon = "mdi:image-outline"
-    _attr_options = MIMBAR_BACKGROUND_VISIBILITY_OPTIONS
+    _attr_options = SKRIN_SOLAT_BACKGROUND_VISIBILITY_OPTIONS
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the Skrin Solat background visibility selector."""
-        self._attr_unique_id = f"{entry.entry_id}_mimbar_background_visibility"
+        self._attr_unique_id = f"{entry.entry_id}_skrin_solat_background_visibility"
         self._attr_device_info = _make_device_info(entry)
-        self._attr_current_option = DEFAULT_MIMBAR_BACKGROUND_VISIBILITY
+        self._attr_current_option = DEFAULT_SKRIN_SOLAT_BACKGROUND_VISIBILITY
 
     async def async_added_to_hass(self) -> None:
         """Restore the last selected background visibility."""
@@ -273,19 +273,19 @@ class MimbarBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
         self.async_write_ha_state()
 
 
-class MimbarTimeFormatSelect(RestoreEntity, SelectEntity):
+class SkrinSolatTimeFormatSelect(RestoreEntity, SelectEntity):
     """Select the shared Skrin Solat clock format for this device."""
 
     _attr_has_entity_name = True
     _attr_name = "Format Masa Skrin Solat"
     _attr_icon = "mdi:clock-outline"
-    _attr_options = MIMBAR_TIME_FORMAT_OPTIONS
+    _attr_options = SKRIN_SOLAT_TIME_FORMAT_OPTIONS
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the Skrin Solat time-format selector."""
-        self._attr_unique_id = f"{entry.entry_id}_mimbar_time_format"
+        self._attr_unique_id = f"{entry.entry_id}_skrin_solat_time_format"
         self._attr_device_info = _make_device_info(entry)
-        self._attr_current_option = DEFAULT_MIMBAR_TIME_FORMAT
+        self._attr_current_option = DEFAULT_SKRIN_SOLAT_TIME_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore the last selected time format."""

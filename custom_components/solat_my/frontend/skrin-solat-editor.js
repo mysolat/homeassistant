@@ -1,5 +1,5 @@
 const { BACKGROUND_COLOR_PRESETS, mergeBasicEditorConfig } = await import(
-  `./mimbar-model.mjs${new URL(import.meta.url).search}`
+  `./skrin-solat-model.mjs${new URL(import.meta.url).search}`
 );
 
 const ENTITY_FIELDS = [
@@ -13,7 +13,7 @@ const ENTITY_FIELDS = [
   ["current", "Waktu semasa"],
 ];
 
-export class MimbarPrayerScreenEditor extends HTMLElement {
+export class SkrinSolatEditor extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -230,13 +230,6 @@ export class MimbarPrayerScreenEditor extends HTMLElement {
   }
 }
 
-// Keep the old editor tag as a subclass alias for dashboards saved with the
-// legacy card type.
-class LegacyMimbarPrayerScreenEditor extends MimbarPrayerScreenEditor {}
-
 if (!customElements.get("solat-my-skrin-solat-card-editor")) {
-  customElements.define("solat-my-skrin-solat-card-editor", MimbarPrayerScreenEditor);
-}
-if (!customElements.get("solat-my-mimbar-card-editor")) {
-  customElements.define("solat-my-mimbar-card-editor", LegacyMimbarPrayerScreenEditor);
+  customElements.define("solat-my-skrin-solat-card-editor", SkrinSolatEditor);
 }

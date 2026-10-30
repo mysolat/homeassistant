@@ -1,25 +1,24 @@
 const assetVersion = new URL(import.meta.url).search;
 const {
   MAIN_PRAYER_KEYS,
-  MIMBAR_COURTYARD_BACKGROUND_URL,
-  assertMimbarConfig,
+  SKRIN_SOLAT_COURTYARD_BACKGROUND_URL,
+  assertSkrinSolatConfig,
   backgroundVeilOpacity,
   buildLowerRail,
   buildPrayerView,
   formatCountdown,
   formatPrayerTime,
-  resolveMimbarBackground,
-  resolveMimbarTheme,
-  resolveMimbarTimeFormat,
+  resolveSkrinSolatBackground,
+  resolveSkrinSolatTheme,
+  resolveSkrinSolatTimeFormat,
   resolveIntegrationBackgroundImages,
   resolveLifecycle,
   SCHEDULE_PRAYER_ICONS,
   splitDayPeriod,
-} = await import(`./mimbar-model.mjs${assetVersion}`);
-await import(`./mimbar-editor.js${assetVersion}`);
+} = await import(`./skrin-solat-model.mjs${assetVersion}`);
+await import(`./skrin-solat-editor.js${assetVersion}`);
 
 const CARD_TYPE = "solat-my-skrin-solat-card";
-const LEGACY_CARD_TYPE = "solat-my-mimbar-card";
 const PRAYER_LABELS = {
   imsak: "Imsak",
   subuh: "Subuh",
@@ -38,7 +37,7 @@ const BACKGROUND_POSITIONS = {
   right: "is-position-right",
 };
 
-export class MimbarPrayerScreenCard extends HTMLElement {
+export class SkrinSolatCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -50,20 +49,20 @@ export class MimbarPrayerScreenCard extends HTMLElement {
   }
 
   setConfig(config) {
-    assertMimbarConfig(config);
+    assertSkrinSolatConfig(config);
     this._config = structuredClone(config);
-    this._mimbarSettingsEntities = undefined;
-    this._mimbarSettingsDiscovery = undefined;
+    this._skrinSolatSettingsEntities = undefined;
+    this._skrinSolatSettingsDiscovery = undefined;
     this._buildDomOnce();
     this._restartRotationTimers();
     this._render(new Date());
-    this._discoverMimbarSettings();
+    this._discoverSkrinSolatSettings();
   }
 
   set hass(hass) {
     const shouldRender = !this._hass || this._hasRelevantStateChange(this._hass, hass);
     this._hass = hass;
-    this._discoverMimbarSettings();
+    this._discoverSkrinSolatSettings();
     if (shouldRender) {
       this._applyBackground(this._backgroundIndex);
       this._render(new Date());
@@ -137,123 +136,123 @@ export class MimbarPrayerScreenCard extends HTMLElement {
         max-block-size: calc(100dvh - var(--header-height, 0px));
         min-height: 0;
         overflow: hidden;
-        --mimbar-accent: oklch(0.88 0.08 151);
-        --mimbar-accent-strong: oklch(0.96 0.035 151);
-        --mimbar-accent-soft: oklch(0.58 0.07 151 / 0.16);
-        --mimbar-accent-line: oklch(0.76 0.08 151 / 0.34);
-        --mimbar-glass-start: oklch(0.5 0.09 151 / 0.34);
-        --mimbar-glass-mid: oklch(0.32 0.07 151 / 0.4);
-        --mimbar-glass-deep: oklch(0.15 0.04 151 / 0.75);
-        --mimbar-glass-glow: oklch(0.66 0.1 151 / 0.18);
-        --mimbar-glass-sheen: oklch(0.98 0.02 151 / 0.28);
-        --mimbar-glass-sheen-accent: oklch(0.88 0.08 151 / 0.18);
-        --mimbar-current-fill: oklch(0.4 0.055 151 / 0.27);
-        --mimbar-next-fill: oklch(0.49 0.08 151 / 0.28);
-        --mimbar-ambient-start: oklch(0.45 0.07 151 / 0.28);
-        --mimbar-ambient-end: oklch(0.28 0.045 151 / 0.08);
-        --mimbar-rail-surface: oklch(0.13 0.035 151 / 0.9);
-        --mimbar-countdown-hours: oklch(0.8 0.1 151);
-        --mimbar-countdown-minutes: oklch(0.9 0.04 151);
-        --mimbar-countdown-seconds: oklch(0.74 0.09 178);
-        --mimbar-ring-outer: oklch(0.72 0.09 151 / 0.5);
-        --mimbar-ring-inner: oklch(0.82 0.05 151 / 0.42);
-        --mimbar-gold: var(--mimbar-accent);
-        --mimbar-gold-strong: var(--mimbar-accent-strong);
-        --mimbar-ink: #f7f1e6;
-        --mimbar-muted: #b7c6b8;
-        --mimbar-deep: #05120d;
-        --mimbar-surface: #0b1d15;
-        --mimbar-line: var(--mimbar-accent-line);
-        --mimbar-ease: 760ms cubic-bezier(0.16, 1, 0.3, 1);
-        --mimbar-background-opacity: 0.76;
-        --mimbar-background-veil-opacity: 1;
-        color: var(--mimbar-ink);
+        --skrin-solat-accent: oklch(0.88 0.08 151);
+        --skrin-solat-accent-strong: oklch(0.96 0.035 151);
+        --skrin-solat-accent-soft: oklch(0.58 0.07 151 / 0.16);
+        --skrin-solat-accent-line: oklch(0.76 0.08 151 / 0.34);
+        --skrin-solat-glass-start: oklch(0.5 0.09 151 / 0.34);
+        --skrin-solat-glass-mid: oklch(0.32 0.07 151 / 0.4);
+        --skrin-solat-glass-deep: oklch(0.15 0.04 151 / 0.75);
+        --skrin-solat-glass-glow: oklch(0.66 0.1 151 / 0.18);
+        --skrin-solat-glass-sheen: oklch(0.98 0.02 151 / 0.28);
+        --skrin-solat-glass-sheen-accent: oklch(0.88 0.08 151 / 0.18);
+        --skrin-solat-current-fill: oklch(0.4 0.055 151 / 0.27);
+        --skrin-solat-next-fill: oklch(0.49 0.08 151 / 0.28);
+        --skrin-solat-ambient-start: oklch(0.45 0.07 151 / 0.28);
+        --skrin-solat-ambient-end: oklch(0.28 0.045 151 / 0.08);
+        --skrin-solat-rail-surface: oklch(0.13 0.035 151 / 0.9);
+        --skrin-solat-countdown-hours: oklch(0.8 0.1 151);
+        --skrin-solat-countdown-minutes: oklch(0.9 0.04 151);
+        --skrin-solat-countdown-seconds: oklch(0.74 0.09 178);
+        --skrin-solat-ring-outer: oklch(0.72 0.09 151 / 0.5);
+        --skrin-solat-ring-inner: oklch(0.82 0.05 151 / 0.42);
+        --skrin-solat-gold: var(--skrin-solat-accent);
+        --skrin-solat-gold-strong: var(--skrin-solat-accent-strong);
+        --skrin-solat-ink: #f7f1e6;
+        --skrin-solat-muted: #b7c6b8;
+        --skrin-solat-deep: #05120d;
+        --skrin-solat-surface: #0b1d15;
+        --skrin-solat-line: var(--skrin-solat-accent-line);
+        --skrin-solat-ease: 760ms cubic-bezier(0.16, 1, 0.3, 1);
+        --skrin-solat-background-opacity: 0.76;
+        --skrin-solat-background-veil-opacity: 1;
+        color: var(--skrin-solat-ink);
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
       *, *::before, *::after { box-sizing: border-box; }
-      ::selection { background: var(--mimbar-gold); color: var(--mimbar-deep); }
-      .mimbar-screen { --mimbar-gold: var(--mimbar-accent); --mimbar-gold-strong: var(--mimbar-accent-strong); background: radial-gradient(ellipse at 6% 52%, var(--mimbar-ambient-start), transparent 42%), radial-gradient(ellipse at 87% 12%, var(--mimbar-ambient-end), transparent 34%), #04120c; block-size: 100%; isolation: isolate; min-height: 0; overflow: hidden; position: relative; }
-      .mimbar-screen[data-background-mode="color"][data-background-color="midnight"] { background: radial-gradient(ellipse at 7% 80%, rgba(45, 83, 145, 0.34), transparent 44%), radial-gradient(ellipse at 90% 15%, rgba(104, 156, 222, 0.16), transparent 32%), #061225; }
-      .mimbar-screen[data-background-mode="color"][data-background-color="slate"] { background: radial-gradient(ellipse at 6% 52%, rgba(86, 111, 108, 0.25), transparent 44%), radial-gradient(ellipse at 87% 12%, rgba(205, 190, 148, 0.08), transparent 34%), #111716; }
-      .mimbar-screen[data-background-mode="color"][data-background-color="burgundy"] { background: radial-gradient(ellipse at 8% 78%, rgba(126, 30, 49, 0.34), transparent 45%), radial-gradient(ellipse at 87% 12%, var(--mimbar-ambient-end), transparent 34%), #26090e; }
-      .mimbar-screen[data-background-mode="color"][data-background-color="indigo"] { background: radial-gradient(ellipse at 5% 70%, rgba(67, 54, 145, 0.34), transparent 45%), radial-gradient(ellipse at 88% 12%, rgba(181, 166, 235, 0.1), transparent 34%), #12102d; }
-      .mimbar-screen::before { background: radial-gradient(ellipse at center, var(--mimbar-ambient-start), var(--mimbar-ambient-end) 36%, transparent 70%); content: ""; filter: blur(2px); height: 68vh; left: -16vw; opacity: var(--mimbar-background-opacity); pointer-events: none; position: absolute; top: 16%; transform: translate3d(0, 0, 0) scale(0.96); width: 68vw; z-index: 2; }
-      .mimbar-screen::after { background: linear-gradient(106deg, rgba(2, 8, 9, 0.90) 0%, rgba(3, 10, 11, 0.82) 44%, rgba(2, 7, 8, 0.68) 100%); content: ""; inset: 0; opacity: var(--mimbar-background-veil-opacity); pointer-events: none; position: absolute; z-index: 1; }
-      .mimbar-screen.is-motion-paused .hero-time::after { animation-play-state: paused; }
+      ::selection { background: var(--skrin-solat-gold); color: var(--skrin-solat-deep); }
+      .skrin-solat-screen { --skrin-solat-gold: var(--skrin-solat-accent); --skrin-solat-gold-strong: var(--skrin-solat-accent-strong); background: radial-gradient(ellipse at 6% 52%, var(--skrin-solat-ambient-start), transparent 42%), radial-gradient(ellipse at 87% 12%, var(--skrin-solat-ambient-end), transparent 34%), #04120c; block-size: 100%; isolation: isolate; min-height: 0; overflow: hidden; position: relative; }
+      .skrin-solat-screen[data-background-mode="color"][data-background-color="midnight"] { background: radial-gradient(ellipse at 7% 80%, rgba(45, 83, 145, 0.34), transparent 44%), radial-gradient(ellipse at 90% 15%, rgba(104, 156, 222, 0.16), transparent 32%), #061225; }
+      .skrin-solat-screen[data-background-mode="color"][data-background-color="slate"] { background: radial-gradient(ellipse at 6% 52%, rgba(86, 111, 108, 0.25), transparent 44%), radial-gradient(ellipse at 87% 12%, rgba(205, 190, 148, 0.08), transparent 34%), #111716; }
+      .skrin-solat-screen[data-background-mode="color"][data-background-color="burgundy"] { background: radial-gradient(ellipse at 8% 78%, rgba(126, 30, 49, 0.34), transparent 45%), radial-gradient(ellipse at 87% 12%, var(--skrin-solat-ambient-end), transparent 34%), #26090e; }
+      .skrin-solat-screen[data-background-mode="color"][data-background-color="indigo"] { background: radial-gradient(ellipse at 5% 70%, rgba(67, 54, 145, 0.34), transparent 45%), radial-gradient(ellipse at 88% 12%, rgba(181, 166, 235, 0.1), transparent 34%), #12102d; }
+      .skrin-solat-screen::before { background: radial-gradient(ellipse at center, var(--skrin-solat-ambient-start), var(--skrin-solat-ambient-end) 36%, transparent 70%); content: ""; filter: blur(2px); height: 68vh; left: -16vw; opacity: var(--skrin-solat-background-opacity); pointer-events: none; position: absolute; top: 16%; transform: translate3d(0, 0, 0) scale(0.96); width: 68vw; z-index: 2; }
+      .skrin-solat-screen::after { background: linear-gradient(106deg, rgba(2, 8, 9, 0.90) 0%, rgba(3, 10, 11, 0.82) 44%, rgba(2, 7, 8, 0.68) 100%); content: ""; inset: 0; opacity: var(--skrin-solat-background-veil-opacity); pointer-events: none; position: absolute; z-index: 1; }
+      .skrin-solat-screen.is-motion-paused .hero-time::after { animation-play-state: paused; }
       .background { inset: 0; overflow: hidden; position: absolute; z-index: 0; }
-      .background-image { height: 100%; inset: 0; object-fit: cover; opacity: 0; position: absolute; transition: opacity var(--mimbar-ease); width: 100%; }
-      .background-image.is-visible { opacity: var(--mimbar-background-opacity); }
+      .background-image { height: 100%; inset: 0; object-fit: cover; opacity: 0; position: absolute; transition: opacity var(--skrin-solat-ease); width: 100%; }
+      .background-image.is-visible { opacity: var(--skrin-solat-background-opacity); }
       .background-image.is-position-center { object-position: center; }
       .background-image.is-position-top { object-position: center top; }
       .background-image.is-position-bottom { object-position: center bottom; }
       .background-image.is-position-left { object-position: left center; }
       .background-image.is-position-right { object-position: right center; }
-      .mimbar-layout { block-size: 100%; display: grid; grid-template-areas: "hero schedule" "rail rail"; grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr); grid-template-rows: minmax(0, 1fr) auto; min-height: 0; position: relative; z-index: 3; }
+      .skrin-solat-layout { block-size: 100%; display: grid; grid-template-areas: "hero schedule" "rail rail"; grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr); grid-template-rows: minmax(0, 1fr) auto; min-height: 0; position: relative; z-index: 3; }
       .hero-region { display: grid; gap: clamp(20px, 2.6vw, 36px); grid-area: hero; grid-template-rows: auto auto minmax(0, 1fr); min-height: 0; padding: clamp(30px, 4.4vw, 76px); }
       .identity { display: grid; gap: 7px; max-width: 52ch; }
       .identity-title { font-size: clamp(18px, 1.8vw, 27px); font-weight: 730; letter-spacing: 0.045em; line-height: 1.12; margin: 0; text-transform: uppercase; }
-      .identity-location { color: var(--mimbar-muted); font-size: 14px; font-weight: 650; line-height: 1.45; margin: 0; }
-      .clock-block { border-bottom: 1px solid var(--mimbar-accent-line); display: grid; gap: 12px; margin-top: clamp(20px, 3vw, 54px); padding-bottom: 18px; }
+      .identity-location { color: var(--skrin-solat-muted); font-size: 14px; font-weight: 650; line-height: 1.45; margin: 0; }
+      .clock-block { border-bottom: 1px solid var(--skrin-solat-accent-line); display: grid; gap: 12px; margin-top: clamp(20px, 3vw, 54px); padding-bottom: 18px; }
       .local-clock { font-feature-settings: "tnum"; font-size: clamp(32px, 4.5vw, 72px); font-variant-numeric: tabular-nums; font-weight: 710; letter-spacing: -0.035em; line-height: 0.9; margin: 0; }
-      .calendar { color: var(--mimbar-muted); display: grid; font-size: clamp(15px, 1.3vw, 20px); font-weight: 600; gap: 3px; line-height: 1.4; margin: 0; }
-      .calendar span:last-child { color: var(--mimbar-gold); }
+      .calendar { color: var(--skrin-solat-muted); display: grid; font-size: clamp(15px, 1.3vw, 20px); font-weight: 600; gap: 3px; line-height: 1.4; margin: 0; }
+      .calendar span:last-child { color: var(--skrin-solat-gold); }
       .day-period { font-size: 0.4em; font-weight: 700; letter-spacing: 0.06em; margin-left: 0.12em; opacity: 0.66; }
       .hero-panel { align-content: center; display: grid; gap: 12px; justify-items: center; min-height: 0; overflow: hidden; padding: clamp(28px, 3.5vw, 52px); position: relative; text-align: center; }
-      .hero-panel::before { background: radial-gradient(circle, var(--mimbar-glass-glow), transparent 66%); content: ""; height: min(100%, 520px); pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); width: min(100%, 520px); }
-      .hero-panel::after { border: 1px solid var(--mimbar-ring-outer); border-radius: 50%; content: ""; height: min(92%, 490px); pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); width: min(92%, 490px); }
+      .hero-panel::before { background: radial-gradient(circle, var(--skrin-solat-glass-glow), transparent 66%); content: ""; height: min(100%, 520px); pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); width: min(100%, 520px); }
+      .hero-panel::after { border: 1px solid var(--skrin-solat-ring-outer); border-radius: 50%; content: ""; height: min(92%, 490px); pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); width: min(92%, 490px); }
       .hero-panel > * { position: relative; z-index: 1; }
-      .hero-signal { color: var(--mimbar-gold-strong); font-size: 12px; font-weight: 720; letter-spacing: 0.12em; line-height: 1.25; margin: 0; text-transform: uppercase; }
+      .hero-signal { color: var(--skrin-solat-gold-strong); font-size: 12px; font-weight: 720; letter-spacing: 0.12em; line-height: 1.25; margin: 0; text-transform: uppercase; }
       .hero-time { display: grid; font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; margin: 0; min-height: clamp(260px, 31vw, 390px); place-items: center; position: relative; width: min(100%, 480px); }
-      .hero-time::before { -webkit-backdrop-filter: blur(18px) saturate(1.35); backdrop-filter: blur(18px) saturate(1.35); background: linear-gradient(142deg, var(--mimbar-glass-start) 0%, var(--mimbar-glass-mid) 28%, var(--mimbar-glass-deep) 54%, var(--mimbar-glass-deep)), radial-gradient(circle at 34% 24%, var(--mimbar-glass-glow), transparent 31%); border: 1px solid var(--mimbar-ring-outer); border-radius: 50%; border-right-color: var(--mimbar-ring-inner); border-top-color: var(--mimbar-ring-inner); box-shadow: inset 0 1px 0 rgba(247, 241, 230, 0.26), inset 0 -22px 48px rgba(0, 0, 0, 0.24), 0 18px 42px rgba(0, 0, 0, 0.2); content: ""; height: min(100%, 390px); left: 50%; pointer-events: none; position: absolute; top: 50%; transform: translate(-50%, -50%) rotate(-42deg); width: min(100%, 390px); z-index: 0; }
-      .hero-time::after { animation: mimbar-glass-sheen 9s cubic-bezier(0.16, 1, 0.3, 1) infinite; background: linear-gradient(118deg, transparent 26%, var(--mimbar-glass-sheen) 43%, var(--mimbar-glass-sheen-accent) 52%, transparent 67%); border: 1px solid var(--mimbar-ring-inner); border-bottom-color: var(--mimbar-ring-outer); border-left-color: var(--mimbar-ring-outer); border-radius: 50%; clip-path: circle(50%); content: ""; height: min(80%, 304px); left: 50%; pointer-events: none; position: absolute; top: 50%; width: min(80%, 304px); z-index: 0; }
+      .hero-time::before { -webkit-backdrop-filter: blur(18px) saturate(1.35); backdrop-filter: blur(18px) saturate(1.35); background: linear-gradient(142deg, var(--skrin-solat-glass-start) 0%, var(--skrin-solat-glass-mid) 28%, var(--skrin-solat-glass-deep) 54%, var(--skrin-solat-glass-deep)), radial-gradient(circle at 34% 24%, var(--skrin-solat-glass-glow), transparent 31%); border: 1px solid var(--skrin-solat-ring-outer); border-radius: 50%; border-right-color: var(--skrin-solat-ring-inner); border-top-color: var(--skrin-solat-ring-inner); box-shadow: inset 0 1px 0 rgba(247, 241, 230, 0.26), inset 0 -22px 48px rgba(0, 0, 0, 0.24), 0 18px 42px rgba(0, 0, 0, 0.2); content: ""; height: min(100%, 390px); left: 50%; pointer-events: none; position: absolute; top: 50%; transform: translate(-50%, -50%) rotate(-42deg); width: min(100%, 390px); z-index: 0; }
+      .hero-time::after { animation: skrin-solat-glass-sheen 9s cubic-bezier(0.16, 1, 0.3, 1) infinite; background: linear-gradient(118deg, transparent 26%, var(--skrin-solat-glass-sheen) 43%, var(--skrin-solat-glass-sheen-accent) 52%, transparent 67%); border: 1px solid var(--skrin-solat-ring-inner); border-bottom-color: var(--skrin-solat-ring-outer); border-left-color: var(--skrin-solat-ring-outer); border-radius: 50%; clip-path: circle(50%); content: ""; height: min(80%, 304px); left: 50%; pointer-events: none; position: absolute; top: 50%; width: min(80%, 304px); z-index: 0; }
       .countdown-digits { align-items: flex-start; display: flex; gap: clamp(3px, 0.8vw, 12px); position: relative; z-index: 1; }
       .countdown-segment { display: grid; gap: 7px; isolation: isolate; justify-items: center; min-width: 0; position: relative; }
-      .countdown-segment::before { background: radial-gradient(circle, var(--mimbar-segment-color) 0%, transparent 70%); content: ""; filter: blur(8px); inset: -24px -12px; opacity: 0.14; pointer-events: none; position: absolute; z-index: 0; }
-      .countdown-segment:nth-child(1) { --mimbar-segment-color: var(--mimbar-countdown-hours); }
-      .countdown-segment:nth-child(3) { --mimbar-segment-color: var(--mimbar-countdown-minutes); }
-      .countdown-segment:nth-child(5) { --mimbar-segment-color: var(--mimbar-countdown-seconds); }
-      .countdown-value { color: var(--mimbar-segment-color, var(--mimbar-gold-strong)); font-size: clamp(44px, 7vw, 96px); font-weight: 720; letter-spacing: -0.035em; line-height: 0.82; position: relative; text-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); z-index: 1; }
-      .countdown-unit { color: var(--mimbar-segment-color, var(--mimbar-muted)); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; line-height: 1.25; opacity: 0.82; position: relative; text-transform: uppercase; z-index: 1; }
-      .countdown-separator { align-self: center; color: var(--mimbar-countdown-minutes); font-size: clamp(36px, 5.4vw, 68px); font-weight: 650; line-height: 0.7; margin-top: -23px; }
-      .countdown-status { color: var(--mimbar-gold-strong); display: none; font-size: clamp(34px, 6vw, 72px); font-weight: 760; letter-spacing: -0.035em; line-height: 1; margin: 0; position: relative; text-align: center; z-index: 1; }
+      .countdown-segment::before { background: radial-gradient(circle, var(--skrin-solat-segment-color) 0%, transparent 70%); content: ""; filter: blur(8px); inset: -24px -12px; opacity: 0.14; pointer-events: none; position: absolute; z-index: 0; }
+      .countdown-segment:nth-child(1) { --skrin-solat-segment-color: var(--skrin-solat-countdown-hours); }
+      .countdown-segment:nth-child(3) { --skrin-solat-segment-color: var(--skrin-solat-countdown-minutes); }
+      .countdown-segment:nth-child(5) { --skrin-solat-segment-color: var(--skrin-solat-countdown-seconds); }
+      .countdown-value { color: var(--skrin-solat-segment-color, var(--skrin-solat-gold-strong)); font-size: clamp(44px, 7vw, 96px); font-weight: 720; letter-spacing: -0.035em; line-height: 0.82; position: relative; text-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); z-index: 1; }
+      .countdown-unit { color: var(--skrin-solat-segment-color, var(--skrin-solat-muted)); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; line-height: 1.25; opacity: 0.82; position: relative; text-transform: uppercase; z-index: 1; }
+      .countdown-separator { align-self: center; color: var(--skrin-solat-countdown-minutes); font-size: clamp(36px, 5.4vw, 68px); font-weight: 650; line-height: 0.7; margin-top: -23px; }
+      .countdown-status { color: var(--skrin-solat-gold-strong); display: none; font-size: clamp(34px, 6vw, 72px); font-weight: 760; letter-spacing: -0.035em; line-height: 1; margin: 0; position: relative; text-align: center; z-index: 1; }
       .hero-time.is-status .countdown-digits { display: none; }
       .hero-time.is-status .countdown-status { display: block; }
-      .hero-label { color: var(--mimbar-ink); font-size: clamp(20px, 2.2vw, 30px); font-weight: 700; line-height: 1.15; margin: 0; }
-      .hero-detail { color: var(--mimbar-muted); font-size: 14px; font-weight: 620; line-height: 1.45; margin: 0; }
+      .hero-label { color: var(--skrin-solat-ink); font-size: clamp(20px, 2.2vw, 30px); font-weight: 700; line-height: 1.15; margin: 0; }
+      .hero-detail { color: var(--skrin-solat-muted); font-size: 14px; font-weight: 620; line-height: 1.45; margin: 0; }
       .schedule-region { align-self: stretch; display: grid; grid-area: schedule; min-height: 0; padding: clamp(30px, 4.4vw, 76px) clamp(30px, 5vw, 96px); }
       .schedule-shell { align-content: stretch; display: grid; gap: 24px; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
-      .schedule-heading { color: var(--mimbar-ink); font-size: clamp(18px, 1.7vw, 25px); font-weight: 690; line-height: 1.2; margin: 0; }
+      .schedule-heading { color: var(--skrin-solat-ink); font-size: clamp(18px, 1.7vw, 25px); font-weight: 690; line-height: 1.2; margin: 0; }
       .schedule-list { border-bottom: 1px solid rgba(183, 198, 184, 0.18); border-top: 1px solid rgba(183, 198, 184, 0.18); display: grid; grid-template-rows: repeat(6, minmax(clamp(62px, 6.4vw, 88px), 1fr)); list-style: none; margin: 0; min-height: 0; padding: 0; }
       .schedule-row { align-items: center; border-bottom: 1px solid rgba(183, 198, 184, 0.15); display: grid; gap: 0 14px; grid-template-areas: "icon name state time"; grid-template-columns: clamp(28px, 2.1vw, 34px) auto minmax(0, 1fr) auto; min-height: clamp(62px, 6.4vw, 88px); padding: 13px 16px; transition: background-color 240ms ease, color 240ms ease; }
       .schedule-row:last-child { border-bottom: 0; }
-      .schedule-row.is-current { background: linear-gradient(90deg, var(--mimbar-current-fill), transparent 78%); }
-      .schedule-row.is-next { background: linear-gradient(90deg, var(--mimbar-next-fill), var(--mimbar-next-fill) 62%, var(--mimbar-accent-soft) 82%, transparent); }
+      .schedule-row.is-current { background: linear-gradient(90deg, var(--skrin-solat-current-fill), transparent 78%); }
+      .schedule-row.is-next { background: linear-gradient(90deg, var(--skrin-solat-next-fill), var(--skrin-solat-next-fill) 62%, var(--skrin-solat-accent-soft) 82%, transparent); }
       .schedule-name { font-size: clamp(17px, 1.65vw, 25px); font-weight: 680; grid-area: name; line-height: 1.15; }
-      .schedule-icon { --mimbar-icon-size: clamp(24px, 1.85vw, 28px); --mdc-icon-size: var(--mimbar-icon-size); align-self: center; color: var(--mimbar-muted); grid-area: icon; height: var(--mimbar-icon-size); width: var(--mimbar-icon-size); }
-      .schedule-time { align-self: center; color: var(--mimbar-ink); font-feature-settings: "tnum"; font-size: clamp(22px, 2.5vw, 39px); font-variant-numeric: tabular-nums; font-weight: 700; grid-area: time; letter-spacing: -0.025em; line-height: 1; text-align: right; }
-      .schedule-state { align-self: center; border: 1px solid var(--mimbar-accent-line); border-radius: 999px; color: var(--mimbar-muted); font-size: 12px; font-weight: 760; grid-area: state; justify-self: start; letter-spacing: 0.055em; line-height: 1.25; padding: 3px 10px; text-transform: uppercase; }
+      .schedule-icon { --skrin-solat-icon-size: clamp(24px, 1.85vw, 28px); --mdc-icon-size: var(--skrin-solat-icon-size); align-self: center; color: var(--skrin-solat-muted); grid-area: icon; height: var(--skrin-solat-icon-size); width: var(--skrin-solat-icon-size); }
+      .schedule-time { align-self: center; color: var(--skrin-solat-ink); font-feature-settings: "tnum"; font-size: clamp(22px, 2.5vw, 39px); font-variant-numeric: tabular-nums; font-weight: 700; grid-area: time; letter-spacing: -0.025em; line-height: 1; text-align: right; }
+      .schedule-state { align-self: center; border: 1px solid var(--skrin-solat-accent-line); border-radius: 999px; color: var(--skrin-solat-muted); font-size: 12px; font-weight: 760; grid-area: state; justify-self: start; letter-spacing: 0.055em; line-height: 1.25; padding: 3px 10px; text-transform: uppercase; }
       .schedule-state:empty { display: none; }
-      .schedule-row.is-current .schedule-state { color: var(--mimbar-muted); }
-      .schedule-row.is-next .schedule-state { background: var(--mimbar-accent-soft); border-color: var(--mimbar-gold); color: var(--mimbar-gold-strong); }
-      .schedule-row.is-past .schedule-name, .schedule-row.is-past .schedule-time { color: var(--mimbar-muted); }
+      .schedule-row.is-current .schedule-state { color: var(--skrin-solat-muted); }
+      .schedule-row.is-next .schedule-state { background: var(--skrin-solat-accent-soft); border-color: var(--skrin-solat-gold); color: var(--skrin-solat-gold-strong); }
+      .schedule-row.is-past .schedule-name, .schedule-row.is-past .schedule-time { color: var(--skrin-solat-muted); }
       .schedule-row.is-past .schedule-icon { opacity: 0.62; }
-      .schedule-row.is-current .schedule-name, .schedule-row.is-current .schedule-time { color: var(--mimbar-ink); }
-      .schedule-row.is-next .schedule-name, .schedule-row.is-next .schedule-time { color: var(--mimbar-gold-strong); }
-      .schedule-row.is-next .schedule-icon { color: var(--mimbar-gold-strong); filter: drop-shadow(0 4px 8px var(--mimbar-accent-soft)); }
-      .lower-rail { align-items: center; background: var(--mimbar-rail-surface); border-top: 1px solid var(--mimbar-line); display: grid; gap: 24px; grid-area: rail; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.5fr); padding: 22px clamp(30px, 4.4vw, 76px) 24px; }
+      .schedule-row.is-current .schedule-name, .schedule-row.is-current .schedule-time { color: var(--skrin-solat-ink); }
+      .schedule-row.is-next .schedule-name, .schedule-row.is-next .schedule-time { color: var(--skrin-solat-gold-strong); }
+      .schedule-row.is-next .schedule-icon { color: var(--skrin-solat-gold-strong); filter: drop-shadow(0 4px 8px var(--skrin-solat-accent-soft)); }
+      .lower-rail { align-items: center; background: var(--skrin-solat-rail-surface); border-top: 1px solid var(--skrin-solat-line); display: grid; gap: 24px; grid-area: rail; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.5fr); padding: 22px clamp(30px, 4.4vw, 76px) 24px; }
       .rail-block { align-content: start; display: grid; gap: 7px; min-height: 44px; }
       .rail-block + .rail-block { border-left: 1px solid rgba(183, 198, 184, 0.18); padding-left: 24px; }
       .rail-items { display: grid; gap: 7px; }
       .rail-item { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; }
-      .rail-label { color: var(--mimbar-muted); font-size: 12px; font-weight: 760; letter-spacing: 0.055em; line-height: 1.25; text-transform: uppercase; }
-      .rail-value { color: var(--mimbar-ink); font-feature-settings: "tnum"; font-size: 15px; font-variant-numeric: tabular-nums; font-weight: 680; line-height: 1.35; }
-      .rail-item.is-current .rail-label, .rail-item.is-current .rail-value { color: var(--mimbar-gold-strong); }
-      .rail-message { color: var(--mimbar-ink); font-size: 15px; font-weight: 590; line-height: 1.45; margin: 0; max-width: 64ch; }
+      .rail-label { color: var(--skrin-solat-muted); font-size: 12px; font-weight: 760; letter-spacing: 0.055em; line-height: 1.25; text-transform: uppercase; }
+      .rail-value { color: var(--skrin-solat-ink); font-feature-settings: "tnum"; font-size: 15px; font-variant-numeric: tabular-nums; font-weight: 680; line-height: 1.35; }
+      .rail-item.is-current .rail-label, .rail-item.is-current .rail-value { color: var(--skrin-solat-gold-strong); }
+      .rail-message { color: var(--skrin-solat-ink); font-size: 15px; font-weight: 590; line-height: 1.45; margin: 0; max-width: 64ch; }
       .rail-image { border-radius: 10px; display: block; max-height: 92px; max-width: 100%; object-fit: contain; object-position: left center; }
       .is-hidden { display: none; }
       @container (max-width: 700px) {
-        .mimbar-screen { block-size: 100%; max-block-size: 100%; min-height: 0; overflow: hidden; }
-        .mimbar-layout { block-size: 100%; grid-template-areas: "hero" "schedule" "rail"; grid-template-columns: 1fr; grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr) auto; min-height: 0; }
+        .skrin-solat-screen { block-size: 100%; max-block-size: 100%; min-height: 0; overflow: hidden; }
+        .skrin-solat-layout { block-size: 100%; grid-template-areas: "hero" "schedule" "rail"; grid-template-columns: 1fr; grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr) auto; min-height: 0; }
         .hero-region { gap: 10px; grid-template-rows: auto auto minmax(0, 1fr); padding: 16px 18px 8px; }
         .clock-block { align-items: end; display: flex; flex-wrap: wrap; gap: 16px; margin-top: 0; padding-bottom: 10px; }
         .calendar { font-size: 14px; }
@@ -294,12 +293,12 @@ export class MimbarPrayerScreenCard extends HTMLElement {
         .schedule-name { font-size: 16px; }
         .schedule-time { font-size: 22px; }
         .schedule-state { font-size: 10px; padding: 1px 7px; }
-        .schedule-icon { --mimbar-icon-size: 22px; }
+        .schedule-icon { --skrin-solat-icon-size: 22px; }
         .lower-rail { gap: 8px; padding: 8px 16px 10px; }
         .rail-block + .rail-block { padding-left: 8px; }
         .rail-item { gap: 4px; }
       }
-      @keyframes mimbar-glass-sheen {
+      @keyframes skrin-solat-glass-sheen {
         0%, 100% { opacity: 0.28; transform: translate3d(-56%, -48%, 0) rotate(8deg); }
         50% { opacity: 0.86; transform: translate3d(-44%, -52%, 0) rotate(8deg); }
       }
@@ -310,14 +309,14 @@ export class MimbarPrayerScreenCard extends HTMLElement {
     `;
 
     const screen = document.createElement("section");
-    screen.className = "mimbar-screen";
+    screen.className = "skrin-solat-screen";
     const background = document.createElement("div");
     background.className = "background";
     const backgroundLayers = [this._createBackgroundLayer(), this._createBackgroundLayer()];
     background.append(...backgroundLayers);
 
     const layout = document.createElement("div");
-    layout.className = "mimbar-layout";
+    layout.className = "skrin-solat-layout";
     const heroRegion = document.createElement("section");
     heroRegion.className = "hero-region";
     const identity = document.createElement("div");
@@ -525,12 +524,12 @@ export class MimbarPrayerScreenCard extends HTMLElement {
     const background = this._effectiveBackground();
     this._nodes.screen.dataset.backgroundMode = background.mode;
     this._nodes.screen.dataset.backgroundColor = background.color;
-    for (const [name, value] of Object.entries(resolveMimbarTheme(background.color))) {
+    for (const [name, value] of Object.entries(resolveSkrinSolatTheme(background.color))) {
       const property = name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-      this._nodes.screen.style.setProperty(`--mimbar-${property}`, value);
+      this._nodes.screen.style.setProperty(`--skrin-solat-${property}`, value);
     }
-    this._nodes.screen.style.setProperty("--mimbar-background-opacity", String(background.opacity / 100));
-    this._nodes.screen.style.setProperty("--mimbar-background-veil-opacity", String(backgroundVeilOpacity(background.opacity)));
+    this._nodes.screen.style.setProperty("--skrin-solat-background-opacity", String(background.opacity / 100));
+    this._nodes.screen.style.setProperty("--skrin-solat-background-veil-opacity", String(backgroundVeilOpacity(background.opacity)));
     const images = this._backgroundImages();
     const source = images[index];
     const incomingIndex = index % this._nodes.backgroundLayers.length;
@@ -555,12 +554,12 @@ export class MimbarPrayerScreenCard extends HTMLElement {
     const effective = this._effectiveBackground();
     if (background?.source === "integration") {
       return resolveIntegrationBackgroundImages({
-        visibility: this._hass?.states?.[this._mimbarSettingsEntities?.visibility]?.state,
-        image: this._hass?.states?.[this._mimbarSettingsEntities?.image]?.state,
+        visibility: this._hass?.states?.[this._skrinSolatSettingsEntities?.visibility]?.state,
+        image: this._hass?.states?.[this._skrinSolatSettingsEntities?.image]?.state,
       });
     }
     if (effective.mode === "courtyard") {
-      return [MIMBAR_COURTYARD_BACKGROUND_URL];
+      return [SKRIN_SOLAT_COURTYARD_BACKGROUND_URL];
     }
     if (effective.mode !== "image") {
       return [];
@@ -569,15 +568,15 @@ export class MimbarPrayerScreenCard extends HTMLElement {
   }
 
   _effectiveBackground() {
-    return resolveMimbarBackground(this._config?.background, {
-      theme: this._hass?.states?.[this._mimbarSettingsEntities?.theme]?.state,
-      opacity: this._hass?.states?.[this._mimbarSettingsEntities?.opacity]?.state,
+    return resolveSkrinSolatBackground(this._config?.background, {
+      theme: this._hass?.states?.[this._skrinSolatSettingsEntities?.theme]?.state,
+      opacity: this._hass?.states?.[this._skrinSolatSettingsEntities?.opacity]?.state,
     });
   }
 
-  _discoverMimbarSettings() {
+  _discoverSkrinSolatSettings() {
     if (
-      this._mimbarSettingsDiscovery
+      this._skrinSolatSettingsDiscovery
       || !this._hass?.callWS
     ) {
       return;
@@ -585,7 +584,7 @@ export class MimbarPrayerScreenCard extends HTMLElement {
 
     const config = this._config;
     const hass = this._hass;
-    this._mimbarSettingsDiscovery = hass.callWS({ type: "config/entity_registry/list" })
+    this._skrinSolatSettingsDiscovery = hass.callWS({ type: "config/entity_registry/list" })
       .then((registry) => {
         if (this._config !== config) {
           return;
@@ -598,12 +597,12 @@ export class MimbarPrayerScreenCard extends HTMLElement {
         const findSetting = (suffix) => registry.find(
           (entry) => entry.unique_id === `${configEntryId}_${suffix}`,
         )?.entity_id;
-        this._mimbarSettingsEntities = {
-          theme: findSetting("mimbar_background"),
-          visibility: findSetting("mimbar_background_visibility"),
-          opacity: findSetting("mimbar_background_opacity"),
-          image: findSetting("mimbar_background_image"),
-          timeFormat: findSetting("mimbar_time_format"),
+        this._skrinSolatSettingsEntities = {
+          theme: findSetting("skrin_solat_background"),
+          visibility: findSetting("skrin_solat_background_visibility"),
+          opacity: findSetting("skrin_solat_background_opacity"),
+          image: findSetting("skrin_solat_background_image"),
+          timeFormat: findSetting("skrin_solat_time_format"),
         };
         this._applyBackground(this._backgroundIndex);
         this._render(new Date());
@@ -618,7 +617,7 @@ export class MimbarPrayerScreenCard extends HTMLElement {
 
     const watchedEntityIds = [
       ...Object.values(this._config?.entities ?? {}),
-      ...Object.values(this._mimbarSettingsEntities ?? {}),
+      ...Object.values(this._skrinSolatSettingsEntities ?? {}),
     ].filter(Boolean);
     return watchedEntityIds.some(
       (entityId) => previousHass?.states?.[entityId] !== nextHass?.states?.[entityId],
@@ -632,9 +631,9 @@ export class MimbarPrayerScreenCard extends HTMLElement {
 
     const states = this._hass.states ?? {};
     const timeZone = this._hass.config?.time_zone ?? "Asia/Kuala_Lumpur";
-    const timeFormat = resolveMimbarTimeFormat(
+    const timeFormat = resolveSkrinSolatTimeFormat(
       this._config.time_format,
-      states[this._mimbarSettingsEntities?.timeFormat]?.state,
+      states[this._skrinSolatSettingsEntities?.timeFormat]?.state,
     );
     const view = buildPrayerView({
       config: { ...this._config, time_format: timeFormat },
@@ -880,15 +879,8 @@ export class MimbarPrayerScreenCard extends HTMLElement {
   }
 }
 
-// One constructor cannot be registered under two names, so the legacy type
-// gets its own subclass. Dashboards saved with the old type keep working.
-class LegacyMimbarCard extends MimbarPrayerScreenCard {}
-
 if (!customElements.get(CARD_TYPE)) {
-  customElements.define(CARD_TYPE, MimbarPrayerScreenCard);
-}
-if (!customElements.get(LEGACY_CARD_TYPE)) {
-  customElements.define(LEGACY_CARD_TYPE, LegacyMimbarCard);
+  customElements.define(CARD_TYPE, SkrinSolatCard);
 }
 
 window.customCards = window.customCards || [];

@@ -21,7 +21,7 @@ async def async_setup_entry(
             AudioFileText(entry, key="azan", default="azan1.mp3, azan2.mp3"),
             AudioFileText(entry, key="azan_subuh", default="azan_subuh.mp3"),
             AudioFileText(entry, key="doa", default="doa_selepas_azan.mp3"),
-            MimbarBackgroundImageText(entry),
+            SkrinSolatBackgroundImageText(entry),
         ]
     )
 
@@ -73,7 +73,7 @@ class AudioFileText(RestoreEntity, TextEntity):
         self.async_write_ha_state()
 
 
-class MimbarBackgroundImageText(RestoreEntity, TextEntity):
+class SkrinSolatBackgroundImageText(RestoreEntity, TextEntity):
     """Configure the local image used by the Skrin Solat image background."""
 
     _attr_has_entity_name = True
@@ -86,7 +86,7 @@ class MimbarBackgroundImageText(RestoreEntity, TextEntity):
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the Skrin Solat local-image path setting."""
-        self._attr_unique_id = f"{entry.entry_id}_mimbar_background_image"
+        self._attr_unique_id = f"{entry.entry_id}_skrin_solat_background_image"
         self._attr_device_info = _make_device_info(entry)
 
     async def async_added_to_hass(self) -> None:
