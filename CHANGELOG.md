@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.14] - 2026-10-30
 
 ### Added
 - `DASHBOARD.md` **Layout 0** uses only built-in cards, so it works without HACS.
