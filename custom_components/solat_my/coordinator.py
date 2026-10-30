@@ -11,6 +11,7 @@ import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -24,6 +25,9 @@ SCAN_INTERVAL = timedelta(hours=12)
 
 # After an error, try again this soon instead of waiting for SCAN_INTERVAL.
 RETRY_AFTER_ERROR = 300  # seconds
+
+# About 30 minutes of failures at RETRY_AFTER_ERROR. Fewer would flag short blips.
+FAILURES_BEFORE_REPAIR = 6
 
 # The calendar keeps this many extra months, beyond the ones the update loop keeps.
 CALENDAR_MONTHS_KEPT = 3
@@ -74,6 +78,12 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Months the calendar read outside the update loop's two months.
         # Kept apart so _async_update_data can prune _months freely.
         self._calendar_months: dict[tuple[str, int, int], dict[str, Any]] = {}
+        # Failed updates in a row. At FAILURES_BEFORE_REPAIR the Repairs notice appears.
+        self._consecutive_failures = 0
+        self._issue_id = f"api_unreachable_{self.config_entry.entry_id}"
+        self.config_entry.async_on_unload(
+            lambda: ir.async_delete_issue(hass, DOMAIN, self._issue_id)
+        )
 
     def async_track_midnight(self) -> Callable[[], None]:
         """Refresh at the start of each new day. Returns the function that stops it."""
@@ -152,6 +162,27 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch today's data, and raise or clear the API repair issue."""
+        try:
+            data = await self._async_update_data_inner()
+        except UpdateFailed as err:
+            self._consecutive_failures += 1
+            if self._consecutive_failures >= FAILURES_BEFORE_REPAIR:
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    self._issue_id,
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="api_unreachable",
+                    translation_placeholders={"zone": self.zone, "error": str(err)},
+                )
+            raise
+        self._consecutive_failures = 0
+        ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
+        return data
+
+    async def _async_update_data_inner(self) -> dict[str, Any]:
         """Return today's prayer times, fetching from API only when the zone or month changes."""
         today_date = dt_util.now(MALAYSIA_TZ).date()
         key = (self.zone, today_date.year, today_date.month)

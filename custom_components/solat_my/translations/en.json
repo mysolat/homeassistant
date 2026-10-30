@@ -18,5 +18,11 @@
     "abort": {
       "already_configured": "A device with this name is already configured."
     }
+  },
+  "issues": {
+    "api_unreachable": {
+      "title": "Prayer times cannot be updated",
+      "description": "The integration has not been able to get prayer times for zone {zone} from solat.my for at least 30 minutes. The prayer time sensors are unavailable, so azan automations may not run.\n\nCheck Home Assistant's internet connection. The integration retries every 5 minutes, and this notice clears itself once it succeeds.\n\nLast error: {error}"
+    }
   }
 }

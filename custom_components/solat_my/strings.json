@@ -18,5 +18,11 @@
     "abort": {
       "already_configured": "Nama peranti ini sudah digunakan."
     }
+  },
+  "issues": {
+    "api_unreachable": {
+      "title": "Waktu solat tidak dapat dikemas kini",
+      "description": "Integrasi tidak dapat mendapatkan waktu solat untuk zon {zone} daripada solat.my sejak sekurang-kurangnya 30 minit. Sensor waktu solat tidak tersedia, jadi automasi azan mungkin tidak berjalan.\n\nSemak sambungan internet Home Assistant. Integrasi cuba lagi setiap 5 minit dan notis ini hilang sendiri apabila berjaya.\n\nRalat terakhir: {error}"
+    }
   }
 }
