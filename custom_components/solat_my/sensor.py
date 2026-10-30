@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -34,6 +36,17 @@ from .coordinator import SolatMyCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 LOCAL_STATE_UPDATE_INTERVAL = timedelta(minutes=1)
+_BEARING_RE = re.compile(r"(\d+)\s*°(?:\s*(\d+)\s*′)?(?:\s*(\d+(?:\.\d+)?)\s*″)?")
+
+
+def _parse_bearing(text: str) -> float | None:
+    """Return a bearing like ``291° 7′ 23″`` in decimal degrees, or None."""
+    match = _BEARING_RE.search(text or "")
+    if match is None:
+        return None
+    deg, minutes, seconds = match.groups()
+    value = int(deg) + int(minutes or 0) / 60 + float(seconds or 0) / 3600
+    return round(value, 2)
 
 
 def _make_device_info(entry: ConfigEntry) -> DeviceInfo:
@@ -62,6 +75,7 @@ async def async_setup_entry(
     entities.append(HijriDateSensor(coordinator, entry))
     entities.append(NextPrayerSensor(coordinator, entry))
     entities.append(CurrentPrayerSensor(coordinator, entry))
+    entities.append(QiblaSensor(coordinator, entry))
 
     async_add_entities(entities)
 
@@ -291,4 +305,34 @@ class CurrentPrayerSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
             "hijri": self.coordinator.data.get("hijri"),
             "date": self.coordinator.data.get("date"),
             "day": self.coordinator.data.get("day"),
+        }
+
+
+class QiblaSensor(CoordinatorEntity[SolatMyCoordinator], SensorEntity):
+    """Sensor for the qibla direction, in degrees from true north."""
+
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = DEGREE
+    _attr_icon = "mdi:compass-outline"
+    _attr_suggested_display_precision = 2
+
+    def __init__(self, coordinator: SolatMyCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_qibla"
+        self._attr_name = "Arah Kiblat"
+        self._attr_device_info = _make_device_info(entry)
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.data is None:
+            return None
+        return _parse_bearing(self.coordinator.data.get("bearing", ""))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        if self.coordinator.data is None:
+            return {}
+        return {
+            "dms": self.coordinator.data.get("bearing"),
+            "rujukan": "utara benar",
         }

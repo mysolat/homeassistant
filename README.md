@@ -74,6 +74,7 @@ The following entities are created under device **"Waktu Solat"** (default name)
 | `sensor.waktu_solat_tarikh_hijri` | Tarikh Hijri | Tarikh Hijri berformat |
 | `sensor.waktu_solat_waktu_solat_seterusnya` | Waktu Solat Seterusnya | Waktu solat seterusnya + kiraan detik (selepas Isyak: Subuh esok) |
 | `sensor.waktu_solat_waktu_solat_semasa` | Waktu Solat Semasa | Tempoh waktu solat semasa |
+| `sensor.waktu_solat_arah_kiblat` | Arah Kiblat | Arah kiblat zon dalam darjah dari utara benar (bukan utara magnet kompas telefon) |
 
 ### Configuration Entities
 

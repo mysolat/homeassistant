@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Prayer times keep working through a solat.my outage. The integration saves the year's timetable on disk and reads from it when the API is unreachable.
+- **Arah Kiblat** sensor: the zone's qibla direction as a number in degrees from true north, for templates and compass cards.
 
 ## [1.0.14] - 2026-10-30
 
