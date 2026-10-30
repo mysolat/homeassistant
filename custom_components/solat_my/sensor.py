@@ -53,7 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Waktu Solat sensors from config entry."""
-    coordinator: SolatMyCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SolatMyCoordinator = entry.runtime_data
 
     entities: list[SensorEntity] = []
     for prayer in PRAYER_TIMES:

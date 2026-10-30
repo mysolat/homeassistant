@@ -13,7 +13,6 @@ from .const import (
     DEFAULT_MIMBAR_BACKGROUND,
     DEFAULT_MIMBAR_BACKGROUND_VISIBILITY,
     DEFAULT_MIMBAR_TIME_FORMAT,
-    DOMAIN,
     MIMBAR_BACKGROUND_OPTIONS,
     MIMBAR_BACKGROUND_VISIBILITY_OPTIONS,
     MIMBAR_TIME_FORMAT_OPTIONS,
@@ -29,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select entities."""
-    coordinator: SolatMyCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SolatMyCoordinator = entry.runtime_data
     async_add_entities(
         [
             ZoneSelect(coordinator, entry),

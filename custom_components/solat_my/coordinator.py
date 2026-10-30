@@ -9,6 +9,7 @@ from typing import Any
 
 import aiohttp
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
@@ -52,36 +53,32 @@ def _parse_date(date_str: str):
 class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to fetch prayer times from solat.my API."""
 
-    def __init__(self, hass: HomeAssistant, name: str, initial_zone: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, name: str, initial_zone: str
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_{name}",
             update_interval=SCAN_INTERVAL,
         )
         self.zone = initial_zone
-        self._cancel_midnight: Callable | None = None
         # (zone, year, month) → API response. Holds this month and, on the
         # last day of the month, next month, so midnight needs no network.
         self._months: dict[tuple[str, int, int], dict[str, Any]] = {}
 
-    def async_setup(self) -> None:
-        """Register a midnight listener to refresh data at the start of each new day."""
+    def async_track_midnight(self) -> Callable[[], None]:
+        """Refresh at the start of each new day. Returns the function that stops it."""
 
         async def _midnight_refresh(_: datetime) -> None:
             _LOGGER.debug("Midnight triggered — refreshing prayer times for zone %s", self.zone)
             await self.async_refresh()
 
-        self._cancel_midnight = async_track_time_change(
+        return async_track_time_change(
             self.hass, _midnight_refresh, hour=0, minute=0, second=0
         )
-
-    def async_shutdown(self) -> None:
-        """Cancel the midnight listener on unload."""
-        if self._cancel_midnight:
-            self._cancel_midnight()
-            self._cancel_midnight = None
 
     async def async_set_zone(self, zone: str) -> None:
         """Change the active zone and immediately refresh data."""

@@ -37,7 +37,7 @@ async def test_midnight_uses_prefetched_month_when_api_is_down(
     mock_api.get(NOVEMBER_URL, json=load_fixture_json("monthly_SGR01_2026_11.json"))
     freezer.move_to("2026-10-31T21:00:00+08:00")
     await _setup(hass, config_entry)
-    coordinator = hass.data["solat_my"][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     mock_api.clear_requests()
     mock_api.get(NOVEMBER_URL, status=500)
@@ -70,7 +70,7 @@ async def test_error_retries_after_five_minutes(
     """After an API error the coordinator retries in five minutes, not 12 hours."""
     freezer.move_to("2026-10-30T10:00:00+08:00")
     await _setup(hass, config_entry)
-    coordinator = hass.data["solat_my"][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     mock_api.clear_requests()
     mock_api.get(OCTOBER_URL, status=500)
