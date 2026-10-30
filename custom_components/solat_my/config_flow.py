@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     API_BASE_URL,
+    API_DETECT_ENDPOINT,
     CONF_NAME,
     CONF_ZONE,
     DEFAULT_NAME,
@@ -52,10 +53,36 @@ async def _validate_zone(hass: HomeAssistant, zone: str) -> dict[str, str] | Non
     return None
 
 
+async def _detect_zone(hass: HomeAssistant) -> str | None:
+    """Return the zone for Home Assistant's home location, or None if unknown."""
+    params = {
+        # About 1 km. Zones are much larger, so this keeps the result and
+        # avoids sending the exact home position.
+        "latitude": f"{hass.config.latitude:.2f}",
+        "longitude": f"{hass.config.longitude:.2f}",
+    }
+    try:
+        session = async_get_clientsession(hass)
+        async with session.get(
+            f"{API_BASE_URL}{API_DETECT_ENDPOINT}",
+            params=params,
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as response:
+            if response.status != 200:
+                return None
+            data = await response.json()
+    except (aiohttp.ClientError, TimeoutError, ValueError):
+        return None
+    zone = data.get("zone") if isinstance(data, dict) else None
+    return zone if zone in ZONES else None
+
+
 class SolatMyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Waktu Solat Malaysia."""
 
     VERSION = 1
+    _suggested_zone: str | None = None
+    _detected: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,6 +110,10 @@ class SolatMyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        if not self._detected:
+            self._detected = True
+            self._suggested_zone = await _detect_zone(self.hass)
+
         zone_options = [
             SelectOptionDict(value=code, label=f"{code} — {desc}")
             for code, desc in sorted(ZONES.items())
@@ -93,7 +124,7 @@ class SolatMyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Required(CONF_ZONE, default=DEFAULT_ZONE): SelectSelector(
+                vol.Required(CONF_ZONE, default=self._suggested_zone or DEFAULT_ZONE): SelectSelector(
                     SelectSelectorConfig(
                         options=zone_options,
                         mode=SelectSelectorMode.DROPDOWN,
