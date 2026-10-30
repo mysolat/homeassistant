@@ -218,15 +218,15 @@ class AnnouncementModeSelect(RestoreEntity, SelectEntity):
 
 
 class MimbarBackgroundSelect(RestoreEntity, SelectEntity):
-    """Select the shared Mimbar display colour for this device."""
+    """Select the shared Skrin Solat display colour for this device."""
 
     _attr_has_entity_name = True
-    _attr_name = "Warna Latar Mimbar"
+    _attr_name = "Warna Latar Skrin Solat"
     _attr_icon = "mdi:palette"
     _attr_options = MIMBAR_BACKGROUND_OPTIONS
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the Mimbar background colour selector."""
+        """Initialize the Skrin Solat background colour selector."""
         self._attr_unique_id = f"{entry.entry_id}_mimbar_background"
         self._attr_device_info = _make_device_info(entry)
         self._attr_current_option = DEFAULT_MIMBAR_BACKGROUND
@@ -240,21 +240,21 @@ class MimbarBackgroundSelect(RestoreEntity, SelectEntity):
         self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
-        """Update the shared Mimbar background colour."""
+        """Update the shared Skrin Solat background colour."""
         self._attr_current_option = option
         self.async_write_ha_state()
 
 
 class MimbarBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
-    """Toggle the shared Mimbar image background for this device."""
+    """Toggle the shared Skrin Solat image background for this device."""
 
     _attr_has_entity_name = True
-    _attr_name = "Paparan Latar Mimbar"
+    _attr_name = "Paparan Latar Skrin Solat"
     _attr_icon = "mdi:image-outline"
     _attr_options = MIMBAR_BACKGROUND_VISIBILITY_OPTIONS
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the Mimbar background visibility selector."""
+        """Initialize the Skrin Solat background visibility selector."""
         self._attr_unique_id = f"{entry.entry_id}_mimbar_background_visibility"
         self._attr_device_info = _make_device_info(entry)
         self._attr_current_option = DEFAULT_MIMBAR_BACKGROUND_VISIBILITY
@@ -268,21 +268,21 @@ class MimbarBackgroundVisibilitySelect(RestoreEntity, SelectEntity):
         self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
-        """Update the shared Mimbar background visibility."""
+        """Update the shared Skrin Solat background visibility."""
         self._attr_current_option = option
         self.async_write_ha_state()
 
 
 class MimbarTimeFormatSelect(RestoreEntity, SelectEntity):
-    """Select the shared Mimbar clock format for this device."""
+    """Select the shared Skrin Solat clock format for this device."""
 
     _attr_has_entity_name = True
-    _attr_name = "Format Masa Mimbar"
+    _attr_name = "Format Masa Skrin Solat"
     _attr_icon = "mdi:clock-outline"
     _attr_options = MIMBAR_TIME_FORMAT_OPTIONS
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the Mimbar time-format selector."""
+        """Initialize the Skrin Solat time-format selector."""
         self._attr_unique_id = f"{entry.entry_id}_mimbar_time_format"
         self._attr_device_info = _make_device_info(entry)
         self._attr_current_option = DEFAULT_MIMBAR_TIME_FORMAT
@@ -296,6 +296,6 @@ class MimbarTimeFormatSelect(RestoreEntity, SelectEntity):
         self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
-        """Update the shared Mimbar time format."""
+        """Update the shared Skrin Solat time format."""
         self._attr_current_option = option
         self.async_write_ha_state()

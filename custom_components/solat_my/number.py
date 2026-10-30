@@ -53,10 +53,10 @@ class AzanVolumeNumber(RestoreEntity, NumberEntity):
 
 
 class MimbarBackgroundOpacityNumber(RestoreEntity, NumberEntity):
-    """Control the visible strength of a Mimbar card background."""
+    """Control the visible strength of a Skrin Solat card background."""
 
     _attr_has_entity_name = True
-    _attr_name = "Kejelasan Latar Mimbar"
+    _attr_name = "Kejelasan Latar Skrin Solat"
     _attr_icon = "mdi:image-outline"
     _attr_native_min_value = 0
     _attr_native_max_value = 100
@@ -65,7 +65,7 @@ class MimbarBackgroundOpacityNumber(RestoreEntity, NumberEntity):
     _attr_native_value = DEFAULT_MIMBAR_BACKGROUND_OPACITY
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the Mimbar background visibility slider."""
+        """Initialize the Skrin Solat background visibility slider."""
         self._attr_unique_id = f"{entry.entry_id}_mimbar_background_opacity"
         self._attr_device_info = _make_device_info(entry)
 
