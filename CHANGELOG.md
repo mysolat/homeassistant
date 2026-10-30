@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.12] - 2026-10-30
+
+### Changed
+- CI runs the HACS validation with no ignored checks. The integration's own `brand/` icons pass the brand check. No change to the integration itself.
+
 ## [1.0.11] - 2026-10-30
 
 ### Changed
