@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.8] - 2026-10-30
 
 ### Added
 - When you add the integration, the zone is pre-selected from Home Assistant's home location (sent to solat.my rounded to about 1 km). Outside Malaysia, or if the lookup fails, it falls back to `SGR01`.
