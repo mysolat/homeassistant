@@ -98,6 +98,10 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         key = (self.zone, year, month)
         return self._months.get(key) or self._calendar_months.get(key)
 
+    def cached_month_keys(self) -> list[tuple[str, int, int]]:
+        """Return the sorted (zone, year, month) keys of every cached month."""
+        return sorted({*self._months, *self._calendar_months})
+
     async def async_get_month(self, year: int, month: int) -> dict[str, Any] | None:
         """Return one month for the current zone, from cache or the API. None if unavailable."""
         if (cached := self.cached_month(year, month)) is not None:

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `DASHBOARD.md` **Layout 0** uses only built-in cards, so it works without HACS.
+- **Download diagnostics** on the integration page. It saves the zone, the last update result and error, and today's times, for bug reports.
 
 ## [1.0.13] - 2026-10-30
 
