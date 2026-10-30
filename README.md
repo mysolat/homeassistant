@@ -104,6 +104,8 @@ See [AUTOMATION.md](AUTOMATION.md) for full automation examples including:
 - Pause all devices during azan, then resume
 - Multi-room broadcast
 
+Import the same automations as ready-made blueprints from [blueprints/automation/solat_my/README.md](blueprints/automation/solat_my/README.md).
+
 ## Supported Zones
 
 All 59 JAKIM prayer time zones are supported:

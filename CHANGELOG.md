@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - When you add the integration, the zone is pre-selected from Home Assistant's home location (sent to solat.my rounded to about 1 km). Outside Malaysia, or if the lookup fails, it falls back to `SGR01`.
+- Six automation blueprints in `blueprints/automation/solat_my/`, importable by URL.
+
+### Changed
+- `peringatan_sebelum_solat` takes `time_before` (a negative duration, for example -15 minutes) instead of `minutes_before`.
+- `azan_harian`, `peringatan_imsak` and `peringatan_sebelum_solat` take an optional `notify_actions` input instead of a `notify_service` name.
 
 ## [1.0.7] - 2026-10-30
 

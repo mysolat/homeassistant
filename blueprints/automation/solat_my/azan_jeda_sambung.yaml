@@ -4,7 +4,9 @@ blueprint:
     Capture every media player currently playing, pause them, play azan + doa,
     then resume all paused devices using a snapshot scene.
   domain: automation
-  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_jeda_sambung.yaml
+  source_url: https://github.com/mysolat/homeassistant/blob/main/blueprints/automation/solat_my/azan_jeda_sambung.yaml
+  homeassistant:
+    min_version: "2024.10.0"
   input:
     subuh_sensor:
       name: Sensor Subuh
@@ -155,9 +157,9 @@ actions:
         media_content_type: audio/mp3
         media_content_id: >
           {% if trigger.id == 'subuh' %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% else %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% endif %}
         metadata: {}
 
@@ -183,12 +185,17 @@ actions:
           title: Doa Selepas Azan
           media_class: music
 
-  - wait_for_trigger:
-      - trigger: state
-        entity_id: "{{ states(media_player_select) }}"
-        to: "idle"
+  # Two waits. The player can still be idle just after play_media, so a single
+  # wait for idle would end at once. Wait for the doa to start, then for it to end.
+  - wait_template: "{{ not is_state(states(media_player_select), 'idle') }}"
+    timeout:
+      seconds: 15
+    continue_on_timeout: true
+
+  - wait_template: "{{ is_state(states(media_player_select), 'idle') }}"
     timeout:
       minutes: 2
+    continue_on_timeout: true
 
   - if:
       - condition: template

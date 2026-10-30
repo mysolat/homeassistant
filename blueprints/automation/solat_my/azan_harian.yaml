@@ -5,7 +5,9 @@ blueprint:
     Plays a different azan for Subuh, optionally announces via TTS or
     pre-recorded audio before the azan, then plays doa selepas azan.
   domain: automation
-  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_harian.yaml
+  source_url: https://github.com/mysolat/homeassistant/blob/main/blueprints/automation/solat_my/azan_harian.yaml
+  homeassistant:
+    min_version: "2024.10.0"
   input:
     subuh_sensor:
       name: Sensor Subuh
@@ -72,12 +74,38 @@ blueprint:
       selector:
         entity:
           domain: text
-    notify_service:
-      name: Mobile Notify Service
-      description: notify service for mobile push (e.g. notify.notify or notify.mobile_app_phone)
-      default: notify.notify
+    doa_file_text:
+      name: Fail Doa Selepas Azan
+      default: text.waktu_solat_fail_doa_selepas_azan
       selector:
-        text:
+        entity:
+          domain: text
+    tts_entity:
+      name: TTS
+      description: >
+        TTS entity that announces the prayer in `tts` mode. Leave empty to
+        skip the announcement.
+      default: ""
+      selector:
+        entity:
+          domain: tts
+    skip_zohor_friday:
+      name: Langkau Zohor pada Jumaat
+      description: >
+        Turn on when `azan_jumaat` plays the azan on Friday, so Zohor does
+        not play twice.
+      default: false
+      selector:
+        boolean:
+    notify_actions:
+      name: Notifikasi tambahan
+      description: >
+        Optional actions to run after the azan starts, for example a mobile
+        push. `trigger.id` holds the prayer: subuh, zohor, asar, maghrib or
+        isyak.
+      default: []
+      selector:
+        action: {}
     subuh_delay:
       name: Tempoh Azan Subuh
       description: Delay after Subuh azan starts before playing doa
@@ -116,8 +144,15 @@ variables:
   announcement_mode_select: !input announcement_mode_select
   azan_file_text: !input azan_file_text
   azan_subuh_file_text: !input azan_subuh_file_text
+  doa_file_text: !input doa_file_text
+  tts_entity: !input tts_entity
+  skip_zohor_friday: !input skip_zohor_friday
 
 actions:
+  - condition: template
+    alias: "Langkau Zohor pada Jumaat"
+    value_template: "{{ not (skip_zohor_friday and trigger.id == 'zohor' and now().weekday() == 4) }}"
+
   - action: persistent_notification.create
     data:
       notification_id: solat_azan
@@ -129,16 +164,6 @@ actions:
         {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
         {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu
         {{ names[trigger.id] }} bagi kawasan ini dan kawasan yang sama waktu dengannya.
-
-  - action: !input notify_service
-    data:
-      title: >
-        🕋 Waktu Solat —
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-        {{ names[trigger.id] }}
-      message: >
-        {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-        {{ now().strftime('%-I:%M %p') }} — Sekarang telah masuk waktu {{ names[trigger.id] }}.
 
   - if:
       - condition: template
@@ -166,14 +191,20 @@ actions:
                 metadata: {}
           - delay: "00:00:10"
     default:
-      - action: tts.google_translate_say
-        data:
-          entity_id: "{{ states(media_player_select) }}"
-          language: id
-          message: >
-            {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
-            Sekarang telah masuk waktu {{ names[trigger.id] }}.
-      - delay: "00:00:10"
+      - if:
+          - condition: template
+            value_template: "{{ tts_entity != '' }}"
+        then:
+          - action: tts.speak
+            continue_on_error: true
+            target:
+              entity_id: "{{ tts_entity }}"
+            data:
+              media_player_entity_id: "{{ states(media_player_select) }}"
+              message: >
+                {% set names = {'subuh': 'Subuh', 'zohor': 'Zohor', 'asar': 'Asar', 'maghrib': 'Maghrib', 'isyak': 'Isyak'} %}
+                Sekarang telah masuk waktu {{ names[trigger.id] }}.
+          - delay: "00:00:10"
 
   - action: media_player.play_media
     target:
@@ -188,11 +219,15 @@ actions:
         media_content_type: audio/mp3
         media_content_id: >
           {% if trigger.id == 'subuh' %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% else %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% endif %}
         metadata: {}
+
+  - choose: []
+    alias: "Notifikasi tambahan"
+    default: !input notify_actions
 
   - choose:
       - conditions:
@@ -209,8 +244,8 @@ actions:
       entity_id: "{{ states(media_player_select) }}"
     data:
       media:
-        media_content_id: media-source://media_source/local/azan/doa_selepas_azan.mp3
+        media_content_id: media-source://media_source/local/azan/{{ states(doa_file_text) }}
         media_content_type: audio/mpeg
         metadata:
-          title: doa_selepas_azan.mp3
+          title: Doa Selepas Azan
           media_class: music

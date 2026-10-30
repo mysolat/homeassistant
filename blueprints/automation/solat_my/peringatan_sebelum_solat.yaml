@@ -1,10 +1,12 @@
 blueprint:
   name: Peringatan Sebelum Solat (solat.my)
   description: >
-    Send a push notification N minutes before a chosen prayer time. Useful for
-    Maghrib countdown during Ramadan.
+    Show a notification, and run your own actions such as a push, a set time
+    before a chosen prayer time. Useful for Maghrib countdown during Ramadan.
   domain: automation
-  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/peringatan_sebelum_solat.yaml
+  source_url: https://github.com/mysolat/homeassistant/blob/main/blueprints/automation/solat_my/peringatan_sebelum_solat.yaml
+  homeassistant:
+    min_version: "2024.10.0"
   input:
     prayer_sensor:
       name: Sensor Waktu Solat
@@ -13,48 +15,55 @@ blueprint:
       selector:
         entity:
           domain: sensor
-    minutes_before:
-      name: Minit Sebelum
-      description: How many minutes before the prayer to notify
-      default: 15
+    time_before:
+      name: Masa Sebelum
+      description: >
+        How long before the prayer to notify, as a negative duration.
+        Enter -15 minutes for a reminder 15 minutes before.
+      default:
+        hours: 0
+        minutes: -15
+        seconds: 0
       selector:
-        number:
-          min: 1
-          max: 60
-          step: 1
-          unit_of_measurement: minutes
-          mode: slider
+        duration:
+          allow_negative: true
     prayer_name:
       name: Nama Solat
       description: Label used inside the notification message
       default: Maghrib
       selector:
         text:
-    notify_service:
-      name: Mobile Notify Service
-      default: notify.notify
+    notify_actions:
+      name: Notifikasi tambahan
+      description: >
+        Optional actions to run at the reminder, for example a mobile push.
+        Templates can use `prayer_name` and `minutes_before`.
+      default: []
       selector:
-        text:
+        action: {}
 
 mode: single
 
 variables:
   prayer_sensor: !input prayer_sensor
-  minutes_before: !input minutes_before
   prayer_name: !input prayer_name
+  minutes_before: "{{ ((as_timestamp(states(prayer_sensor)) - as_timestamp(trigger.now)) / 60) | round(0) | int }}"
 
 triggers:
-  - trigger: template
-    value_template: >
-      {{ (as_timestamp(states(prayer_sensor)) - as_timestamp(now())) | int == (minutes_before | int * 60) }}
+  - trigger: time
+    at:
+      entity_id: !input prayer_sensor
+      offset: !input time_before
 
 actions:
-  - action: !input notify_service
+  - action: persistent_notification.create
     data:
+      notification_id: solat_peringatan
       title: "🕌 Peringatan Waktu Solat"
       message: >
         {{ prayer_name }} dalam masa {{ minutes_before }} minit pada pukul
         {{ as_timestamp(states(prayer_sensor)) | timestamp_custom('%H:%M') }}.
-      data:
-        push:
-          sound: default
+
+  - choose: []
+    alias: "Notifikasi tambahan"
+    default: !input notify_actions

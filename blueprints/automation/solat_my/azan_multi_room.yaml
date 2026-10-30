@@ -2,7 +2,9 @@ blueprint:
   name: Azan Serentak Multi-Room (solat.my)
   description: Broadcast azan to multiple speakers simultaneously at prayer time.
   domain: automation
-  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_multi_room.yaml
+  source_url: https://github.com/mysolat/homeassistant/blob/main/blueprints/automation/solat_my/azan_multi_room.yaml
+  homeassistant:
+    min_version: "2024.10.0"
   input:
     subuh_sensor:
       name: Sensor Subuh
@@ -104,8 +106,8 @@ actions:
         media_content_type: audio/mp3
         media_content_id: >
           {% if trigger.id == 'subuh' %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_subuh_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% else %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% endif %}
         metadata: {}

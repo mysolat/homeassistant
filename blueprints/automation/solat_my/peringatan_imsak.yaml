@@ -2,7 +2,9 @@ blueprint:
   name: Peringatan Imsak (solat.my)
   description: Play a reminder audio and send a notification at Imsak time.
   domain: automation
-  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/peringatan_imsak.yaml
+  source_url: https://github.com/mysolat/homeassistant/blob/main/blueprints/automation/solat_my/peringatan_imsak.yaml
+  homeassistant:
+    min_version: "2024.10.0"
   input:
     imsak_sensor:
       name: Sensor Imsak
@@ -16,11 +18,12 @@ blueprint:
       selector:
         entity:
           domain: select
-    notify_service:
-      name: Mobile Notify Service
-      default: notify.notify
+    notify_actions:
+      name: Notifikasi tambahan
+      description: Optional actions to run after the reminder starts, for example a mobile push.
+      default: []
       selector:
-        text:
+        action: {}
     reminder_volume:
       name: Kelantangan Peringatan
       default: 0.5
@@ -57,11 +60,6 @@ actions:
         {{ now().strftime('%-I:%M %p') }} — Sudah masuk waktu Imsak.
         Berhenti makan dan minum sekarang.
 
-  - action: !input notify_service
-    data:
-      title: "🌙 Waktu Imsak"
-      message: "Sudah masuk waktu Imsak. Berhenti makan dan minum sekarang."
-
   - if:
       - condition: template
         value_template: >
@@ -81,3 +79,7 @@ actions:
         media_content_id: "media-source://media_source/local/azan/{{ imsak_filename }}"
         media_content_type: audio/mp3
         metadata: {}
+
+  - choose: []
+    alias: "Notifikasi tambahan"
+    default: !input notify_actions

@@ -4,7 +4,9 @@ blueprint:
     Override Zohor azan on Friday with a Jumaat azan file. Falls back to a
     random azan filename on other weekdays.
   domain: automation
-  source_url: https://github.com/solatmy/homeassistant/blob/main/blueprints/automation/solat_my/azan_jumaat.yaml
+  source_url: https://github.com/mysolat/homeassistant/blob/main/blueprints/automation/solat_my/azan_jumaat.yaml
+  homeassistant:
+    min_version: "2024.10.0"
   input:
     zohor_sensor:
       name: Sensor Zohor
@@ -81,6 +83,6 @@ actions:
           {% if now().weekday() == 4 %}
             media-source://media_source/local/azan/{{ azan_jumaat_filename }}
           {% else %}
-            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(', ') | random | trim }}
+            {{ "media-source://media_source/local/azan/" ~ states(azan_file_text).split(',') | map('trim') | reject('eq', '') | list | random }}
           {% endif %}
         metadata: {}
