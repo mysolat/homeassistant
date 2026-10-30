@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.6] - 2026-10-30
 
 ### Fixed
 - The zone chosen with `select.waktu_solat_zon` now survives a restart. Before, the sensors went back to the setup zone's times until the next month.
