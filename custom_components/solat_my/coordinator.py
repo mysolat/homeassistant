@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Waktu Solat Malaysia."""
 from __future__ import annotations
 
+import html
 import logging
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -9,11 +10,12 @@ from typing import Any
 import aiohttp
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import API_BASE_URL, API_MONTHLY_ENDPOINT, DOMAIN
+from .const import API_BASE_URL, API_MONTHLY_ENDPOINT, DOMAIN, MALAYSIA_TZ
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +60,7 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.zone = initial_zone
         self._cancel_midnight: Callable | None = None
         self._monthly_cache: dict[str, Any] | None = None
-        self._cache_ym: tuple[int, int] | None = None  # (year, month)
+        self._cache_key: tuple[str, int, int] | None = None  # (zone, year, month)
 
     def async_setup(self) -> None:
         """Register a midnight listener to refresh data at the start of each new day."""
@@ -81,40 +83,39 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Change the active zone and immediately refresh data."""
         self.zone = zone
         self._monthly_cache = None
-        self._cache_ym = None
+        self._cache_key = None
         await self.async_refresh()
 
+    async def _async_fetch_month(self, zone: str) -> dict[str, Any]:
+        """Fetch one month of prayer times for a zone from the solat.my API."""
+        url = API_BASE_URL + API_MONTHLY_ENDPOINT.format(zone=zone)
+        session = async_get_clientsession(self.hass)
+        try:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                if response.status != 200:
+                    raise UpdateFailed(f"Error fetching prayer times: HTTP {response.status}")
+                data = await response.json()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise UpdateFailed(f"Error communicating with solat.my API: {err}") from err
+
+        if data.get("status") != "OK!":
+            raise UpdateFailed(f"API returned error status: {data.get('status')}")
+        if not data.get("prayerTime"):
+            raise UpdateFailed("No prayer time data received from API")
+        return data
+
     async def _async_update_data(self) -> dict[str, Any]:
-        """Return today's prayer times, fetching from API only when the month changes."""
-        # Use Home Assistant timezone for date boundaries.
-        today_date = dt_util.now().date()
-        current_ym = (today_date.year, today_date.month)
+        """Return today's prayer times, fetching from API only when the zone or month changes."""
+        today_date = dt_util.now(MALAYSIA_TZ).date()
+        cache_key = (self.zone, today_date.year, today_date.month)
 
-        if self._monthly_cache is None or self._cache_ym != current_ym:
+        if self._monthly_cache is None or self._cache_key != cache_key:
             _LOGGER.debug(
-                "Fetching monthly prayer times for zone %s (%d-%02d)",
-                self.zone, *current_ym,
+                "Fetching monthly prayer times for zone %s (%d-%02d)", *cache_key
             )
-            url = API_BASE_URL + API_MONTHLY_ENDPOINT.format(zone=self.zone)
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                        if response.status != 200:
-                            raise UpdateFailed(
-                                f"Error fetching prayer times: HTTP {response.status}"
-                            )
-                        data = await response.json()
-            except aiohttp.ClientError as err:
-                raise UpdateFailed(f"Error communicating with solat.my API: {err}") from err
-
-            if data.get("status") != "OK!":
-                raise UpdateFailed(f"API returned error status: {data.get('status')}")
-
-            if not data.get("prayerTime"):
-                raise UpdateFailed("No prayer time data received from API")
-
+            data = await self._async_fetch_month(self.zone)
             self._monthly_cache = data
-            self._cache_ym = current_ym
+            self._cache_key = cache_key
         else:
             _LOGGER.debug("Using cached monthly prayer times for zone %s", self.zone)
             data = self._monthly_cache
@@ -136,7 +137,7 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 try:
                     parsed[prayer] = datetime.strptime(
                         _normalise_ms_date(f"{date_str} {time_str}"), "%d-%b-%Y %H:%M:%S"
-                    )
+                    ).replace(tzinfo=MALAYSIA_TZ)
                 except ValueError:
                     _LOGGER.warning(
                         "Could not parse %s time: %s %s", prayer, date_str, time_str
@@ -148,7 +149,7 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return {
             "zone": data.get("zone", self.zone),
             "zone_desc": self._zone_desc(),
-            "bearing": data.get("bearing", ""),
+            "bearing": html.unescape(data.get("bearing", "")),
             "hijri": today.get("hijri", ""),
             "date": today.get("date", ""),
             "day": today.get("day", ""),

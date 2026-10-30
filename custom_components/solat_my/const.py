@@ -1,4 +1,8 @@
 """Constants for Waktu Solat Malaysia integration."""
+from zoneinfo import ZoneInfo
+
+# JAKIM publishes every time in Malaysian time, whatever zone Home Assistant uses.
+MALAYSIA_TZ = ZoneInfo("Asia/Kuala_Lumpur")
 
 DOMAIN = "solat_my"
 
