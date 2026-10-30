@@ -25,6 +25,9 @@ SCAN_INTERVAL = timedelta(hours=12)
 # After an error, try again this soon instead of waiting for SCAN_INTERVAL.
 RETRY_AFTER_ERROR = 300  # seconds
 
+# The calendar keeps this many extra months, beyond the ones the update loop keeps.
+CALENDAR_MONTHS_KEPT = 3
+
 # JAKIM uses Malay month abbreviations (lang=ms_my) since 2026.
 # Map them to English so strptime %b can parse them.
 _MS_TO_EN = {
@@ -68,6 +71,9 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # (zone, year, month) → API response. Holds this month and, on the
         # last day of the month, next month, so midnight needs no network.
         self._months: dict[tuple[str, int, int], dict[str, Any]] = {}
+        # Months the calendar read outside the update loop's two months.
+        # Kept apart so _async_update_data can prune _months freely.
+        self._calendar_months: dict[tuple[str, int, int], dict[str, Any]] = {}
 
     def async_track_midnight(self) -> Callable[[], None]:
         """Refresh at the start of each new day. Returns the function that stops it."""
@@ -84,7 +90,28 @@ class SolatMyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Change the active zone and immediately refresh data."""
         self.zone = zone
         self._months.clear()
+        self._calendar_months.clear()
         await self.async_refresh()
+
+    def cached_month(self, year: int, month: int) -> dict[str, Any] | None:
+        """Return one cached month for the current zone. Never fetches. None on a miss."""
+        key = (self.zone, year, month)
+        return self._months.get(key) or self._calendar_months.get(key)
+
+    async def async_get_month(self, year: int, month: int) -> dict[str, Any] | None:
+        """Return one month for the current zone, from cache or the API. None if unavailable."""
+        if (cached := self.cached_month(year, month)) is not None:
+            return cached
+        key = (self.zone, year, month)
+        try:
+            data = await self._async_fetch_month(*key)
+        except UpdateFailed as err:
+            _LOGGER.debug("Could not fetch %s for the calendar: %s", key, err)
+            return None
+        self._calendar_months[key] = data
+        while len(self._calendar_months) > CALENDAR_MONTHS_KEPT:
+            del self._calendar_months[next(iter(self._calendar_months))]
+        return data
 
     async def _async_fetch_month(self, zone: str, year: int, month: int) -> dict[str, Any]:
         """Fetch one month of prayer times for a zone from the solat.my API."""
