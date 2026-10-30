@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.11] - 2026-10-30
 
 ### Changed
 - Display settings are named with a **Skrin** prefix (Skrin Warna Latar, Skrin Paparan Latar, Skrin Kejelasan Latar, Skrin Imej Latar, Skrin Format Masa), and the buttons are **Uji Main Azan** and **Uji Henti Azan**, so each group sorts together on the device page. New installs get matching entity IDs; existing entity IDs do not change.
