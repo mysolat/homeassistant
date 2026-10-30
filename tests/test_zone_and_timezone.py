@@ -92,7 +92,7 @@ async def test_timeout_retries_setup(
     hass, config_entry, aioclient_mock, freezer
 ) -> None:
     """An API timeout makes setup retry instead of raising an unexpected error."""
-    aioclient_mock.get(MONTHLY_URL.format(zone="SGR01"), exc=TimeoutError())
+    aioclient_mock.get(MONTHLY_URL.format(zone="SGR01", month=10, year=2026), exc=TimeoutError())
     freezer.move_to(NOW)
 
     await _setup(hass, config_entry)
