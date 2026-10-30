@@ -29,7 +29,9 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 ### Via HACS (Recommended)
 
-1. In HACS, add this repository as a custom repository
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mysolat&repository=homeassistant&category=integration)
+
+1. Select the button above, or in HACS add this repository as a custom repository
 2. Search for "Waktu Solat Malaysia" and install
 3. Restart Home Assistant
 
@@ -40,7 +42,9 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 ## Configuration
 
-1. Go to **Settings → Devices & Services → Add Integration**
+[![Open your Home Assistant instance and start setting up Waktu Solat Malaysia.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=solat_my)
+
+1. Select the button above, or go to **Settings → Devices & Services → Add Integration**
 2. Search for **"Waktu Solat Malaysia"**
 3. Enter a **Device Name** (default: `Waktu Solat`) — this becomes the entity ID prefix
 4. Select the **starting zone** (e.g., `SGR01 — Selangor - Gombak, Petaling, ...`)
@@ -104,7 +108,18 @@ See [AUTOMATION.md](AUTOMATION.md) for full automation examples including:
 - Pause all devices during azan, then resume
 - Multi-room broadcast
 
-Import the same automations as ready-made blueprints from [blueprints/automation/solat_my/README.md](blueprints/automation/solat_my/README.md).
+### Blueprints
+
+Import the same automations as ready-made blueprints. Setup notes are in [blueprints/automation/solat_my/README.md](blueprints/automation/solat_my/README.md).
+
+| Blueprint | What it does | Import |
+|---|---|---|
+| [azan_harian](blueprints/automation/solat_my/azan_harian.yaml) | Azan for all five prayer times, with announcement and doa | [![Import azan_harian.yaml blueprint.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmysolat%2Fhomeassistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsolat_my%2Fazan_harian.yaml) |
+| [azan_jumaat](blueprints/automation/solat_my/azan_jumaat.yaml) | Azan Jumaat at Zohor on Fridays | [![Import azan_jumaat.yaml blueprint.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmysolat%2Fhomeassistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsolat_my%2Fazan_jumaat.yaml) |
+| [peringatan_imsak](blueprints/automation/solat_my/peringatan_imsak.yaml) | Reminder at Imsak | [![Import peringatan_imsak.yaml blueprint.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmysolat%2Fhomeassistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsolat_my%2Fperingatan_imsak.yaml) |
+| [peringatan_sebelum_solat](blueprints/automation/solat_my/peringatan_sebelum_solat.yaml) | Reminder before a chosen prayer | [![Import peringatan_sebelum_solat.yaml blueprint.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmysolat%2Fhomeassistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsolat_my%2Fperingatan_sebelum_solat.yaml) |
+| [azan_jeda_sambung](blueprints/automation/solat_my/azan_jeda_sambung.yaml) | Pause playing speakers, play azan and doa, then resume | [![Import azan_jeda_sambung.yaml blueprint.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmysolat%2Fhomeassistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsolat_my%2Fazan_jeda_sambung.yaml) |
+| [azan_multi_room](blueprints/automation/solat_my/azan_multi_room.yaml) | Azan on several speakers at once | [![Import azan_multi_room.yaml blueprint.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmysolat%2Fhomeassistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsolat_my%2Fazan_multi_room.yaml) |
 
 ## Supported Zones
 
