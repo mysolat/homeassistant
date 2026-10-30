@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Arah Kiblat** sensor: the zone's qibla direction as a number in degrees from true north, for templates and compass cards.
+
 ## [1.0.14] - 2026-10-30
 
 ### Added
