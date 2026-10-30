@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.10] - 2026-10-30
 
 ### Added
 - **Kalendar Solat** calendar entity: the five prayer times as calendar events, for calendar triggers in automations and the Calendar panel.
