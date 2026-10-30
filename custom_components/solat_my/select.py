@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import (
+    async_track_state_added_domain,
+    async_track_state_removed_domain,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -154,23 +157,21 @@ class MediaPlayerSelect(RestoreEntity, SelectEntity):
         self._persist_selected_player()
 
         @callback
-        def _on_media_player_change(event) -> None:
+        def _on_media_players_changed(event) -> None:
+            """Refresh the option list when a media player is added or removed."""
             self._attr_options = self._get_media_players()
             # Do not auto-switch current option when entities appear/disappear.
             # User selection is persisted and should remain sticky.
             self.async_write_ha_state()
 
-        @callback
-        def _filter_media_player_events(event) -> None:
-            """Filter state-changed events to media_player domain only."""
-            if event.data.get("entity_id", "").startswith("media_player."):
-                _on_media_player_change(event)
-
-        # Track ALL media_player domain state changes (covers new players added later)
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                EVENT_STATE_CHANGED,
-                _filter_media_player_events,
+            async_track_state_added_domain(
+                self.hass, "media_player", _on_media_players_changed
+            )
+        )
+        self.async_on_remove(
+            async_track_state_removed_domain(
+                self.hass, "media_player", _on_media_players_changed
             )
         )
         self.async_write_ha_state()

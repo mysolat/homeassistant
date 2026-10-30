@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- The azan media player list now updates only when a media player is added or removed. Before, it ran on every state change in Home Assistant.
+
 ## [1.0.9] - 2026-10-30
 
 ### Changed
