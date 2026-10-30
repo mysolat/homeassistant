@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - An API reply that is not valid JSON now retries in 5 minutes like any other API error. Before, it waited 12 hours, and on the last day of the month it could fail the whole update.
 
+### Changed
+- The coordinator now uses Home Assistant's config entry lifecycle (`config_entry=`, `entry.runtime_data`, `async_on_unload`). Unloading the integration now runs Home Assistant's own coordinator cleanup.
+
 ## [1.0.6] - 2026-10-30
 
 ### Fixed
