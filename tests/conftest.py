@@ -26,10 +26,10 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 @pytest.fixture(autouse=True)
-def skip_mimbar_frontend():
-    """Skip serving the Mimbar card: the test instance has no HTTP server."""
+def skip_skrin_solat_frontend():
+    """Skip serving the Skrin Solat card: the test instance has no HTTP server."""
     with patch(
-        "custom_components.solat_my._async_register_mimbar_frontend", AsyncMock()
+        "custom_components.solat_my._async_register_skrin_solat_frontend", AsyncMock()
     ):
         yield
 

@@ -6,11 +6,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 NAMES = (
-    ("select", "mimbar_background", "Warna Latar Skrin Solat", "warna_latar"),
-    ("select", "mimbar_background_visibility", "Paparan Latar Skrin Solat", "paparan_latar"),
-    ("select", "mimbar_time_format", "Format Masa Skrin Solat", "format_masa"),
-    ("number", "mimbar_background_opacity", "Kejelasan Latar Skrin Solat", "kejelasan_latar"),
-    ("text", "mimbar_background_image", "Imej Latar Skrin Solat", "imej_latar"),
+    ("select", "skrin_solat_background", "Warna Latar Skrin Solat", "warna_latar"),
+    ("select", "skrin_solat_background_visibility", "Paparan Latar Skrin Solat", "paparan_latar"),
+    ("select", "skrin_solat_time_format", "Format Masa Skrin Solat", "format_masa"),
+    ("number", "skrin_solat_background_opacity", "Kejelasan Latar Skrin Solat", "kejelasan_latar"),
+    ("text", "skrin_solat_background_image", "Imej Latar Skrin Solat", "imej_latar"),
 )
 
 
@@ -21,10 +21,10 @@ async def _setup(hass, config_entry) -> None:
 
 
 @pytest.mark.parametrize(("domain", "suffix", "name", "id_stem"), NAMES)
-async def test_entity_has_skrin_solat_name_and_old_unique_id(
+async def test_entity_has_skrin_solat_name_and_unique_id(
     hass, config_entry, mock_api, freezer, domain, suffix, name, id_stem
 ) -> None:
-    """A new install gets Skrin Solat names and IDs; the unique ID still says mimbar."""
+    """A new install gets Skrin Solat names and unique IDs."""
     freezer.move_to("2026-10-30T10:00:00+08:00")
     await _setup(hass, config_entry)
 
@@ -44,7 +44,7 @@ async def test_image_error_names_skrin_solat(
     freezer.move_to("2026-10-30T10:00:00+08:00")
     await _setup(hass, config_entry)
     entity_id = er.async_get(hass).async_get_entity_id(
-        "text", "solat_my", f"{config_entry.entry_id}_mimbar_background_image"
+        "text", "solat_my", f"{config_entry.entry_id}_skrin_solat_background_image"
     )
 
     with pytest.raises((ValueError, HomeAssistantError), match="Skrin Solat"):
