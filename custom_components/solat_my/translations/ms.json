@@ -18,13 +18,5 @@
     "abort": {
       "already_configured": "Nama peranti ini sudah digunakan."
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Pilihan Waktu Solat",
-        "description": "Tukar zon waktu solat menggunakan entiti 'Zon' pada halaman peranti. Tiada pilihan lain tersedia di sini."
-      }
-    }
   }
 }

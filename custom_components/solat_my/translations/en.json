@@ -18,13 +18,5 @@
     "abort": {
       "already_configured": "A device with this name is already configured."
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Prayer Time Options",
-        "description": "Change the prayer time zone using the 'Zon' entity on the device page. No other options are available here."
-      }
-    }
   }
 }
