@@ -8,7 +8,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 
 ## Features
 
-- **25 entities** created automatically per device — no helpers needed:
+- **26 entities** created automatically per device — no helpers needed:
   - **8 prayer time sensors** (Imsak, Subuh, Syuruk, Dhuha, Zohor, Asar, Maghrib, Isyak)
   - **Tarikh Hijri** — formatted Hijri date with month name in Malay
   - **Waktu Solat Seterusnya** — next upcoming prayer with countdown
@@ -19,6 +19,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
   - **Kelantangan Azan** — volume slider (0.0–1.0)
   - **Fail Audio Azan / Subuh / Doa** — configurable audio filenames
   - **Uji Azan / Henti Azan** — buttons that play the azan now, or stop it
+  - **Kalendar Solat** — calendar with the five prayer times as events, for calendar triggers in automations and the Calendar panel
   - **Skrin Solat display controls** — background colour, image visibility, clarity, local image, and 12h/24h time for the full-screen Skrin Solat card
 - Supports **59 Malaysian zones** (all JAKIM zones + W.P.)
 - UI-based setup — just enter a name and pick a starting zone
@@ -50,7 +51,7 @@ A proper Home Assistant custom component that fetches Malaysian prayer times dir
 3. Enter a **Device Name** (default: `Waktu Solat`) — this becomes the entity ID prefix
 4. Select the **starting zone** (e.g., `SGR01 — Selangor - Gombak, Petaling, ...`)
    The zone is pre-selected from your Home Assistant home location. The integration sends that location, rounded to about 1 km, to solat.my once. You can choose a different zone.
-5. Click Submit — all 25 entities appear immediately
+5. Click Submit — all 26 entities appear immediately
 
 > **To change zone later:** go to the device page and change the **Zon** select entity. All prayer time sensors update instantly without a restart.
 
@@ -98,6 +99,12 @@ The following entities are created under device **"Waktu Solat"** (default name)
 | `button.waktu_solat_uji_azan` | Uji Azan | Plays the first file of **Fail Audio Azan** now, on **Pemain Media Azan** at **Kelantangan Azan** volume. Use it to check your setup without waiting for a prayer |
 | `button.waktu_solat_henti_azan` | Henti Azan | Stops **Pemain Media Azan** |
 
+### Calendar
+
+| Entity ID | Name | Description |
+|-----------|------|-------------|
+| `calendar.waktu_solat_kalendar_solat` | Kalendar Solat | Subuh, Zohor, Asar, Maghrib and Isyak as calendar events. Each event starts when the prayer time begins. It lasts 10 minutes for display only. Imsak, Syuruk and Dhuha are not events |
+
 ## Dashboard Cards
 
 See [DASHBOARD.md](DASHBOARD.md) for ready-to-paste Mushroom Card layouts and the full-screen Skrin Solat card. The Skrin Solat card is served and loaded by this integration, so there is no dashboard resource to add; put it in a Panel view and map its timestamp, Hijri, and current-prayer entities explicitly. Configure its normal background on the matching Solat.my device through **Warna Latar Skrin Solat**, **Paparan Latar Skrin Solat**, **Kejelasan Latar Skrin Solat**, and **Imej Latar Skrin Solat**; use **Format Masa Skrin Solat** to choose 24-hour or 12-hour display time. The courtyard stays behind colour changes unless you turn the background off or provide a local replacement image. It calculates the next main prayer locally, including the after-Isyak Subuh rollover, and never controls azan audio.
@@ -115,6 +122,27 @@ See [AUTOMATION.md](AUTOMATION.md) for full automation examples including:
 - Pre-prayer countdown notification
 - Pause all devices during azan, then resume
 - Multi-room broadcast
+
+### Calendar trigger
+
+**Kalendar Solat** starts one event when each prayer time begins, as JAKIM publishes it. The 10-minute length of an event is for display only. It does not say when the prayer time ends. Use `event: start` in a calendar trigger. The offset `"-0:10:00"` runs the automation 10 minutes before the prayer time.
+
+This automation sends a reminder 10 minutes before Maghrib:
+
+```yaml
+triggers:
+  - trigger: calendar
+    event: start
+    offset: "-0:10:00"
+    entity_id: calendar.waktu_solat_kalendar_solat
+conditions:
+  - condition: template
+    value_template: "{{ trigger.calendar_event.summary == 'Maghrib' }}"
+actions:
+  - action: notify.notify
+    data:
+      message: "Maghrib dalam 10 minit."
+```
 
 ### Blueprints
 

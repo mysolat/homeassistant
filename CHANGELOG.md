@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Kalendar Solat** calendar entity: the five prayer times as calendar events, for calendar triggers in automations and the Calendar panel.
 - **Uji Azan** and **Henti Azan** buttons play the configured azan now, or stop it, so you can check the player, volume and file without waiting for a prayer.
 
 ### Changed
