@@ -22,6 +22,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.TEXT,
+    Platform.BUTTON,
 ]
 
 MIMBAR_FRONTEND_URL = f"/api/{DOMAIN}/mimbar"
