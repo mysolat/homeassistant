@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.15] - 2026-10-31
 
 ### Added
 - Prayer times keep working through a solat.my outage. The integration saves the year's timetable on disk and reads from it when the API is unreachable.
